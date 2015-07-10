@@ -68,24 +68,62 @@ def tag_tokens_number(tokens):
 
     return [token for token in tokens if re.search(pattern, token) is not None ]
 
+'''
+levenshtein edit distance between two strings a,b,
+from wikipedia
+'''
+def levenshtein(s1, s2):
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+
+    # len(s1) >= len(s2)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
+            deletions = current_row[j] + 1       # than s2
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+
+    return previous_row[-1]
 
 '''
 helper function for tag_tokens_movies()
 ALL STRING COMPARISONS should be done here to make sure the lower()
 is applied evenly
 input, two String words
-returns True if the words are equal except for one
+returns True if the words are equal, or equal except for one
 substitution OR one insertion OR one deletion typo
 '''
-# todo: make all string comparisons like this?
+# todo return to other functions exactly how off the guess is
+
 def typo(w1, w2):
     w1 = w1.lower()
     w2 = w2.lower()
     if w1 == w2:
         return True
-    #todo the actual typo bit!!!!
-    if len(w1) and len(w2) > 2:
-        pass
+    # check for typos. other ideas: tying in the concept of
+    # the letters around a letter on the Qwerty keyboard
+    #
+    # substitution of one letter/ hammond distance
+    if len(w1) == len(w2):
+        s = 0
+        for i, j in zip(w1, w2):
+            if i == j:
+                s += 1
+        if abs(s-len(w1)) <= 1:
+            return True
+
+    # insertion or deletion / levenshtein distance
+    if abs(len(w1)-len(w2)) <= 1 and min(len(w1), len(w2)) >= 3:
+        if levenshtein(w1, w2) <= 1:
+            return True
+
     return False
 
 '''
@@ -159,16 +197,28 @@ def tag_tokens_movies(tokens, ntm, ntt):
     # mentioned or req'd
     tc = [i for i, title in enumerate(theatre_comps) if look(title, tokens)]
     ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens)]
-    tb = set(tc).intersection(set(ta))
+    tb = set(tc) & (set(ta))
+    if len(tc) == 0:
+        tfinal = ta
+    elif len(ta) == 0:
+        tfinal = tc
+    elif len(tb) == 0:
+        tfinal = tc
+    else:
+        tfinal = tb
     # need to index into a separate list that contains the theatre name
-    found_theatres = [theatres[t].bms_name for t in tb]
-
-    # if they mention more than 1 movie or theatre, need some logic
-    # do in later module todo
+    found_theatres = [theatres[t].bms_name for t in tfinal]
 
     return found_movies, found_theatres
 
 
 # for debugging
+#
+'''
+from knowledge import get_theatres
+ntm, ntt, tl = get_theatres()
 
-ntm, ntt, tl = get_theatres(())
+t = tokeniser("something something put in a movie name here ok")[1]
+
+fm, ft = tag_tokens_movies(t, ntm, ntt)
+'''

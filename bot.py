@@ -5,7 +5,7 @@ import threading
 from knowledge import get_theatres
 from classes import Conversation, ChatLine, MovieRequest
 from tokeniser import tokeniser, tag_tokens_number, tag_tokens_movies
-
+from collections import deque
 '''
 Bot class:
 
@@ -46,14 +46,14 @@ class Bot:
         req = MovieRequest('test', ntm, ntt)
         conversation = Conversation()
 
-        chat_buffer = []
+        chat_buffer = collections.deque()
         # accept input at all times
         # open separate thread which writes it to a buffer
 
         def add_to_buffer():
             while True:
                 inp = raw_input()
-                chat_buffer.insert(0, inp)
+                chat_buffer.appendLeft(inp)
                 if inp.__eq__('bye'):
                     print("Goodbye!")
                     break
