@@ -46,7 +46,7 @@ class Bot:
         req = MovieRequest('test', ntm, ntt)
         conversation = Conversation()
 
-        chat_buffer = collections.deque()
+        chat_buffer = deque()
         # accept input at all times
         # open separate thread which writes it to a buffer
 
@@ -55,7 +55,6 @@ class Bot:
                 inp = raw_input()
                 chat_buffer.appendLeft(inp)
                 if inp.__eq__('bye'):
-                    print("Goodbye!")
                     break
 
         buffer_thread = threading.Thread(name='buffer_thread', target=add_to_buffer)
@@ -65,6 +64,10 @@ class Bot:
         print("also happening")
         inp = buffer_thread.pop()
         print(inp)
+
+        if inp.__eq__('bye'):
+            print("Goodbye!")
+            return
 
         # send input to tokenizer
         # todo how to support checking multiple lines at once?
@@ -77,10 +80,10 @@ class Bot:
         # understand the prepositions to find where the info is
         # todo submodule, for now check everything
 
-        # return the numbers found in the input todo
+        # return the numbers found in the input
         tagged_number = tag_tokens_number(tokens)
 
-        # return the movies and theatres mentioned in the input todo
+        # return the movies and theatres mentioned in the input
         # can only return known movies and theatres
         tag_movs, tag_theat = tag_tokens_movies(tokens)
 

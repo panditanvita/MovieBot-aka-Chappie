@@ -64,9 +64,22 @@ DT determiner (some, the), PRP pronoun,  CD numeral
 JJ adjective, NN noun, VB verb, IN prep/conjunction
 '''
 def tag_tokens_number(tokens):
-    pattern = r"[0-9]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand"
+    pattern = r"[0-9]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|" \
+              r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand"
 
-    return [token for token in tokens if re.search(pattern, token) is not None ]
+    return [token for token in tokens if re.search(pattern, token) is not None]
+
+'''
+checks for times
+days of the week, times of the day
+'''
+def tag_tokens_time(tokens):
+    pattern = r"morning|evening|night|tonight|2nite|tonite|today|" \
+              r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds(day)?|" \
+              r"thurs(day)?|sat(urday)?"
+
+    return [token for token in tokens if re.search(pattern, token) is not None]
+
 
 '''
 levenshtein edit distance between two strings a,b,
@@ -169,7 +182,7 @@ def look(title, tokens):
 '''
 looking for movie titles, theatre names, addresses
 
-uthese might be present in full, in part, or with typos
+these might be present in full, in part, or with typos
 mst be lenient
 
 coiterates through tokens, trying to match it to first movie title
@@ -212,7 +225,8 @@ def tag_tokens_movies(tokens, ntm, ntt):
     return found_movies, found_theatres
 
 
-# for debugging
+
+# for debugging - later will put most of it into the init
 #
 '''
 from knowledge import get_theatres
