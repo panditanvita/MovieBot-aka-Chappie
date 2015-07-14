@@ -184,14 +184,16 @@ def look(title, tokens):
     return False
 
 '''
+tag_tokens_movies()
 looking for movie titles, theatre names, addresses
 
 these might be present in full, in part, or with typos
-mst be lenient
+must be lenient
+cleans theatre names of certain words(theatre, cinemas)
 
 coiterates through tokens, trying to match it to first movie title
 word or movie company word
-uld potentially match to more than one possible, in that case
+could potentially match to more than one item, in that case
 return all possible
 returns list of all movies found, list of all theatres found
 as String[] movietitles, String[] theatre names
@@ -211,27 +213,26 @@ def tag_tokens_movies(tokens, ntm, ntt):
     # first, check if theatre companies are mentioned. then check
     # if their addresses are mentioned.
     # todo need a lot more logic, because often the full address isn't
-    # mentioned or req'd
+    # mentioned or req'd - change it so that the most common addresses are more likely
     tc = [i for i, title in enumerate(theatre_comps) if look(title, tokens)]
     ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens)]
     tb = set(tc) & (set(ta))
-    if len(tc) == 0:
+    if len(tc) == 0:  # no companies mentioned, so return addresses mentioned
         tfinal = ta
-    elif len(ta) == 0:
-        tfinal = tc
-    elif len(tb) == 0:
-        tfinal = tc
+    elif len(ta) == 0:  # no addresses mentioned, so return companies mentioned
+        tfinal = tc     # will return empty list if neither mentioned
+    elif len(tb) == 0:  # nothing in both, but neither are zero, so return smaller
+        tfinal = min(tc, ta)
     else:
-        tfinal = tb
+        tfinal = tb  # items in both sets
     # need to index into a separate list that contains the theatre name
-    found_theatres = [theatres[t].bms_name for t in tfinal]
+    found_theatres = [theatres[t].bms_name.lower() for t in tfinal]
 
     return found_movies, found_theatres
 
 
 
-# for debugging - later will put most of it into the init
-#
+# for debugging
 '''
 from knowledge import get_theatres
 ntm, ntt, tl = get_theatres()

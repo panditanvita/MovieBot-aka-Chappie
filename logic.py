@@ -35,6 +35,9 @@ def narrow_down(found_movies):
 
 
 '''
+narrow()
+input: MovieRequest object and several lists of tags. Movie and Theatre names must be
+keys into their respective maps
 takes and fills in a MovieRequest object based on the most likely
 outputs.
 if there is only one movie and/or theatre, input into request, return 1
@@ -45,12 +48,13 @@ assuming time is for today
 
 returns returned1,returned2, a tuple of results for movies, theatres
 '''
-def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntt):
-    returned1 = 0, ""
-    returned2 = 0, ""
+def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntm, ntt):
+    returned1 = 0, "Which movie?"
+    returned2 = 0, "At which theatre?"
 
     if narrow_down(tag_movs)[0] == 1:
-        req.add_title(tag_movs[0])
+        m_nice = ntm[tag_movs[0]]
+        req.add_title(m_nice)
         returned1 = 1, ""
 
     if narrow_down(tag_movs)[0] > 1:
@@ -59,16 +63,16 @@ def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntt):
 
     if narrow_down(tag_theats)[0] == 1:
         t = tag_theats[0]
+        t_nice = ntt[t].bms_name
         if req.done[0]:
             # check if movie is in theatre today
             d = ntt[t].movies
             if len(d.get(req.title, [])) == 0:
-                returned2 = 0, "Sorry, but " + req.title + " isn't showing at " + t + " today."
+                returned2 = 0, "Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
             else:
-
                 returned2 = 2, "Possible showings: " + d.get(req.title)
         else:
-            req.add_theatre(t)
+            req.add_theatre(t_nice)
             returned2 = 1, ""
 
     if narrow_down(tag_theats)[0] > 1:
@@ -78,7 +82,7 @@ def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntt):
         if req.done[0]:
             ft = [t for t in tag_theats if len(ntt[t].movies.get(req.title, [])) < 0]
         statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft)])
-        returned1 = 2, "That movie is playing in: " + statement
+        returned2 = 2, "That movie is playing in: " + statement
 
     r3 = narrow_num(req, returned1, returned2, tag_number, tag_times)
 
@@ -110,10 +114,13 @@ passes on final information to the bot
 Checks movie, then theatre, then number of tickets
 '''
 def evaluate(req, r1, r2, r3):
-    if req.done[0] == 0:
+    if req.done[0] == 0:  # no movie
         return r1[1]
-    if req.done[2] == 0:
+    if req.done[2] == 0:  # no theatre
         return r2[1]
     #if req.done[1] == 0:
     #   return r3[1]
     return "ok"
+
+
+print("Logic module loaded")

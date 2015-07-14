@@ -45,27 +45,36 @@ class Bot:
 
     def run(self):
         req = MovieRequest('test')
-        conversation = Conversation()
+        chatLines = []
+        conversation = Conversation(chatLines)
 
         chat_buffer = deque()
         # accept input at all times
         # open separate thread which writes it to a buffer
+        new_text = threading.Event()
 
         def add_to_buffer():
             while True:
                 inp = raw_input()
-                chat_buffer.appendLeft(inp)
+                chat_buffer.appendleft(inp)
+                new_text.set()
                 if inp.__eq__('bye'):
                     break
 
         buffer_thread = threading.Thread(name='buffer_thread', target=add_to_buffer)
-        buffer_thread.start()
+        buffer_thread.daemon = True
 
+        buffer_thread.start()
+        print("Hi")
         # main thread
         # while buffer_thread has items in it, pop off items and process
         while True:
-            inp = buffer_thread.pop()
-            print(inp)
+            new_text.wait(timeout=20) # timeout wait doesn't seem to do anything todo
+            try:
+                inp = chat_buffer.pop()
+                new_text.clear()
+            except IndexError:
+                continue
 
             if inp.__eq__('bye'):
                 print("Goodbye!")
@@ -74,11 +83,14 @@ class Bot:
 
             # send input to tokenizer
             # todo how to support checking multiple lines at once?
-            tokens = tokeniser(inp, self.ntm, self.ntt)
+            tokens = tokeniser(inp)[1]
 
+            if len(tokens) < 1:
+                print("..?")
+                continue
             #  track of current conversation-create and update
             # Conversation object
-            conversation.chatLines.append(ChatLine(content=tokens))
+            conversation.chatLines.append(ChatLine(content=tokens[0]))
 
             # understand the prepositions to find where the info is
             # todo submodule, for now check everything
@@ -89,18 +101,22 @@ class Bot:
 
             # return the movies and theatres mentioned in the input
             # can only return known movies and theatres
-            tag_movs, tag_theats = tag_tokens_movies(tokens)
+            tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt)
 
             # logic for what to do if there is more than one of the above,
             # must narrow it down todo next
-            evald = narrow(req, tag_movs, tag_theats, tag_number, tag_times, self.ntt)
+            evald = narrow(req, tag_movs, tag_theats, tag_number, tag_times, self.ntm, self.ntt)
 
+            # ask a question to find out later information
             if evald is not 'ok':
                 print(evald)
-            else:
                 print("Got it, thanks.")
+            else:
                 print req.readout()
                 return
 
+'''
 bot = Bot()
 bot.run()
+
+'''

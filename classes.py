@@ -110,15 +110,17 @@ class Conversation:
 
 '''
 classes for bot
+
+Title is movie title
 '''
 
 
 class MovieRequest:
     # takes in customer id
     def __init__(self, customer):
-        self.title = "[]"  # lower
+        self.title = "[]"  # Cased
         self.num_tickets = 0  # integer
-        self.theatre = "[]"  # lower
+        self.theatre = "[]"  # bms_name
         self.date = "[]"
         self.time = "[]"
         self.payment_method = 0

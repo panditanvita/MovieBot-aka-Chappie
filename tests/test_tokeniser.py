@@ -51,7 +51,21 @@ class Test(unittest.TestCase):
     ntm, ntt, tl = get_theatres()
 
     def test_tagMoviesAndTheatres(self):
-        self.assertTrue()
+        k = self.ntm.keys()[4:8]
+        movies = [k1.split() for k1 in k]
+
+        starts = [tokeniser('i want to see')[1], tokeniser('please')[1], tokeniser('tickets for')[1]]
+
+        tokens = [starts[0]+movies[0], movies[1]+starts[1], starts[2]+movies[2]+starts[1]]
+
+        r0 = tag_tokens_movies(tokens[0], self.ntm, self.ntt)
+        r1 = tag_tokens_movies(tokens[1], self.ntm, self.ntt)
+        r2 = tag_tokens_movies(tokens[2], self.ntm, self.ntt)
+
+        self.assertEqual(r0[0], [k[0]])
+        self.assertEqual(r1[0], [k[1]])
+        self.assertEqual(r2[0], [k[2]])
+
 
 
 def main():
