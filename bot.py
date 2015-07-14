@@ -6,6 +6,7 @@ from knowledge import get_theatres
 from classes import Conversation, ChatLine, MovieRequest
 from tokeniser import tokeniser, tag_tokens_number, tag_tokens_movies
 from collections import deque
+from logic import narrow
 '''
 Bot class:
 
@@ -85,10 +86,11 @@ class Bot:
 
         # return the movies and theatres mentioned in the input
         # can only return known movies and theatres
-        tag_movs, tag_theat = tag_tokens_movies(tokens)
+        tag_movs, tag_theats = tag_tokens_movies(tokens)
 
         # logic for what to do if there is more than one of the above,
         # must narrow it down todo next
+        narrow(req, tag_movs, tag_theats)
 
         # submodule for each attribute, each function
         # makes sure that what it inputs into the movie request is
