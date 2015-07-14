@@ -114,20 +114,18 @@ classes for bot
 
 
 class MovieRequest:
-    # takes in customer id, namesToMovies and namesToTheaters mappings
-    def __init__(self, customer, ntm, ntt):
-        self.title = ""  # lower
+    # takes in customer id
+    def __init__(self, customer):
+        self.title = "[]"  # lower
         self.num_tickets = 0  # integer
-        self.theatre = ""  # lower
-        self.date = ""
-        self.time = ""
+        self.theatre = "[]"  # lower
+        self.date = "[]"
+        self.time = "[]"
         self.payment_method = 0
 
         self.done = [0, 0, 0, 0, 0, 0]  # check for the six earlier attrs
         self.comments = ""
         self.customer = customer
-        self.namesToMovies = ntm  # keys are lower
-        self.namesToTheatres = ntt  # keys are lower
 
     def remaining(self):
         return self.done
@@ -145,7 +143,7 @@ class MovieRequest:
         self.done[2] = 1
         return True, ""
 
-    def add_date(self, date):
+    def add_date(self, date): # either today, tomorrow, or a day of the week
         self.date = date
         self.done[3] = 1
         return True, ""
@@ -159,3 +157,9 @@ class MovieRequest:
     def add_payment(self, payment):
         self.payment_method = payment
         self.done[5] = 1
+
+    def readout(self):
+        readout = '{} tickets for {} at {},' \
+                  ' for the {} showtime, {}'.format(self.num_tickets, self.title, self.theatre, self.time, self.date)
+        return readout
+

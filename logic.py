@@ -3,7 +3,15 @@ __author__ = 'V'
 '''
 logic submodule
 
+finally, decisions: do we have enough information?
+which questions must we ask to get more information?
+maybe the selected movie is not playing in the selected theatre?
+give alternate showtimes
 
+
+submodule for each attribute, each function
+makes sure that what it inputs into the movie request is
+correct. takes in chatline information
 '''
 
 '''
@@ -29,26 +37,83 @@ def narrow_down(found_movies):
 '''
 takes and fills in a MovieRequest object based on the most likely
 outputs.
-if there is only one movie and/or theatre, input into request
+if there is only one movie and/or theatre, input into request, return 1
 if there is more than one, send in a question to narrow it down
 need to make sure the ticket is valid!
 
 assuming time is for today
+
+returns returned1,returned2, a tuple of results for movies, theatres
 '''
-def narrow(req, tag_movs, tag_theats):
+def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntt):
+    returned1 = 0, ""
+    returned2 = 0, ""
 
-    if narrow_down(tag_movs) == 1:
+    if narrow_down(tag_movs)[0] == 1:
         req.add_title(tag_movs[0])
+        returned1 = 1, ""
 
-    if narrow_down(tag_theats) == 1:
-        # first check if it's playing
+    if narrow_down(tag_movs)[0] > 1:
+        statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(tag_movs)])
+        returned1 = 2, "Possible options: " + statement
+
+    if narrow_down(tag_theats)[0] == 1:
+        t = tag_theats[0]
         if req.done[0]:
             # check if movie is in theatre today
-            pass
-        req.add_theatre(tag_theats[0])
+            d = ntt[t].movies
+            if len(d.get(req.title, [])) == 0:
+                returned2 = 0, "Sorry, but " + req.title + " isn't showing at " + t + " today."
+            else:
 
-    if narrow_down(tag_theats) > 1:
+                returned2 = 2, "Possible showings: " + d.get(req.title)
+        else:
+            req.add_theatre(t)
+            returned2 = 1, ""
+
+    if narrow_down(tag_theats)[0] > 1:
         # check which all are playing if movie is mentioned
         # then return subset or full set of tag_theats
-        pass
-    return
+        ft = tag_theats
+        if req.done[0]:
+            ft = [t for t in tag_theats if len(ntt[t].movies.get(req.title, [])) < 0]
+        statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft)])
+        returned1 = 2, "That movie is playing in: " + statement
+
+    r3 = narrow_num(req, returned1, returned2, tag_number, tag_times)
+
+    return evaluate(req, returned1, returned2, r3)
+
+'''
+Given at least a movie title, and the list of times/numbers mentioned, try to narrow down which
+time to choose
+input: returned1 and returned2 are tuples 0|1|2, Message for movies and theatres
+tagged_number is a list of numbers
+'''
+def narrow_num(req, returned1, returned2, tag_number, tag_time):
+    # huge todo
+    if len(tag_number) == 1:
+        try:
+            i = int(tag_number[0])
+            req.add_tickets(i)
+        except ValueError:
+            pass  # todo
+    if len(tag_time) == 1:
+        pass  # todo something to parse times into known format for known showtimes
+    # returned1, returned2
+    return req.done[1], ""
+
+'''
+decide what more information is required
+passes on final information to the bot
+
+Checks movie, then theatre, then number of tickets
+'''
+def evaluate(req, r1, r2, r3):
+    if req.done[0] == 0:
+        return r1[1]
+    if req.done[2] == 0:
+        return r2[1]
+    #if req.done[1] == 0:
+    #   return r3[1]
+    return "ok"

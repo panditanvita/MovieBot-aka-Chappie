@@ -66,7 +66,7 @@ JJ adjective, NN noun, VB verb, IN prep/conjunction
 def tag_tokens_number(tokens):
     pattern = r"[0-9]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|" \
               r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand"
-
+    # todo - something for turning words like two, three into integers
     return [token for token in tokens if re.search(pattern, token) is not None]
 
 '''
@@ -74,8 +74,12 @@ checks for times
 days of the week, times of the day
 '''
 def tag_tokens_time(tokens):
-    pattern = r"morning|evening|night|tonight|2nite|tonite|today|" \
-              r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds(day)?|" \
+    p1 = "(2|to)(nite|night)"
+    tokens = [re.sub(p1, "tonight", tok) for tok in tokens]
+    p2 = "(2|to)(morrow|moro|morro)"
+    tokens = [re.sub(p2, "tomorrow", tok) for tok in tokens]
+    pattern = r"morning|evening|night|tonight|today|" \
+              r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds|wednesday|" \
               r"thurs(day)?|sat(urday)?"
 
     return [token for token in tokens if re.search(pattern, token) is not None]

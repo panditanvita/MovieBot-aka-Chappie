@@ -22,16 +22,26 @@ Controller: Submodule logic. Extracts information from token lists given by Movi
 submodule will keep track of what information needs to be learned to complete the MovieRequest, and tells the bot to ask
 those questions.
 
+
+idea of an 'expert system' with a knowledge base and logical rule-set.
+
+knowledge takes care of scraping and parsing information from the internet/stored files
+
+tokeniser parses information from the customer, looking for cues like numbers, names of movies
+and theaters, and times
+
+logic takes tokenised information and attempts to fill in the request object, making
+sure that the information is mutually compatible
 '''
 
 
 '''
 ORDER:
-run Classes to initialise all classes
-run Knowledge to web scrape(note: doesn't do that within run),
-create list of Theatres
+run Bot file
+interact with bot on the console
+will finish by either fulfilling a request, or if you input "bye"
 
-run Bot
-
+handy:
+reload(module)
 
 '''

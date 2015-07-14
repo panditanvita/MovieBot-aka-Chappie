@@ -4,7 +4,7 @@ import threading
 
 from knowledge import get_theatres
 from classes import Conversation, ChatLine, MovieRequest
-from tokeniser import tokeniser, tag_tokens_number, tag_tokens_movies
+from tokeniser import tokeniser, tag_tokens_number, tag_tokens_time, tag_tokens_movies
 from collections import deque
 from logic import narrow
 '''
@@ -31,6 +31,7 @@ class Bot:
         self.records = []
         self.requests = []
         self.error_log = []
+        self.ntm, self.ntt, trash = get_theatres()
 
     '''
     run() function
@@ -43,8 +44,7 @@ class Bot:
     '''
 
     def run(self):
-        ntm, ntt, trash = get_theatres()
-        req = MovieRequest('test', ntm, ntt)
+        req = MovieRequest('test')
         conversation = Conversation()
 
         chat_buffer = deque()
@@ -61,50 +61,46 @@ class Bot:
         buffer_thread = threading.Thread(name='buffer_thread', target=add_to_buffer)
         buffer_thread.start()
 
+        # main thread
         # while buffer_thread has items in it, pop off items and process
-        print("also happening")
-        inp = buffer_thread.pop()
-        print(inp)
+        while True:
+            inp = buffer_thread.pop()
+            print(inp)
 
-        if inp.__eq__('bye'):
-            print("Goodbye!")
-            return
+            if inp.__eq__('bye'):
+                print("Goodbye!")
+                print(req.readout())
+                return
 
-        # send input to tokenizer
-        # todo how to support checking multiple lines at once?
-        tokens = tokeniser(inp, ntm, ntt)
+            # send input to tokenizer
+            # todo how to support checking multiple lines at once?
+            tokens = tokeniser(inp, self.ntm, self.ntt)
 
-        #  track of current conversation-create and update
-        # Conversation object
-        conversation.chatLines.append(ChatLine(content=tokens))
+            #  track of current conversation-create and update
+            # Conversation object
+            conversation.chatLines.append(ChatLine(content=tokens))
 
-        # understand the prepositions to find where the info is
-        # todo submodule, for now check everything
+            # understand the prepositions to find where the info is
+            # todo submodule, for now check everything
 
-        # return the numbers found in the input
-        tagged_number = tag_tokens_number(tokens)
+            # return the numbers found in the input
+            tag_number = tag_tokens_number(tokens)
+            tag_times = tag_tokens_time(tokens)
 
-        # return the movies and theatres mentioned in the input
-        # can only return known movies and theatres
-        tag_movs, tag_theats = tag_tokens_movies(tokens)
+            # return the movies and theatres mentioned in the input
+            # can only return known movies and theatres
+            tag_movs, tag_theats = tag_tokens_movies(tokens)
 
-        # logic for what to do if there is more than one of the above,
-        # must narrow it down todo next
-        narrow(req, tag_movs, tag_theats)
+            # logic for what to do if there is more than one of the above,
+            # must narrow it down todo next
+            evald = narrow(req, tag_movs, tag_theats, tag_number, tag_times, self.ntt)
 
-        # submodule for each attribute, each function
-        # makes sure that what it inputs into the movie request is
-        # correct. takes in chatline information
-        # todo
-
-        # finally, decisions: do we have enough information?
-        # which questions must we ask to get more information?
-        # maybe the selected movie is not playing in the selected theatre?
-        # give alternate showtimes
-
-        pass
-
+            if evald is not 'ok':
+                print(evald)
+            else:
+                print("Got it, thanks.")
+                print req.readout()
+                return
 
 bot = Bot()
-
 bot.run()
