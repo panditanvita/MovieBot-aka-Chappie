@@ -32,10 +32,10 @@ class Test(unittest.TestCase):
 
     tokens = ["i'm", 'going', 'at', 'ten', 'o', 'clock', 'to', 'the',
               '9.45', 'showing', 'and', 'then', 'the', 'ten-thirty', 'showing']
-    ans2 = ['ten', '9.45', 'ten-thirty']
+    ans2 ={'ten', '9.45', 'ten-thirty'}
 
     def test_tags_tokens(self):
-        self.assertTrue(tag_tokens_number(self.tokens) == self.ans2)
+        self.assertTrue(set(tag_tokens_number(self.tokens)) == self.ans2)
 
     t1 = ['i', 'want', 'to', 'see', 'Spy']
     t2 = ["give", "tickets", "for", "jurassic", "world", "please"]

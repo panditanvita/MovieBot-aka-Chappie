@@ -314,4 +314,5 @@ def get_theatres():
 
         url = startUrl + "&start=" + str(len(theatreList))
 
+    print("Knowledge base loaded")
     return namesToMovies, namesToTheatres, theatreList

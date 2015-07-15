@@ -31,15 +31,28 @@ class Bot:
         self.records = []
         self.requests = []
         self.error_log = []
-        self.ntm, self.ntt, trash = get_theatres()
+        self.ntm, self.ntt, trash = get_theatres() # should not be changed after instantiation
 
     '''
     run() function
 
-    handles a movie request
-    Take in all customer data
-    run() function takes in incoming lines from user, uses tokenizer and
-    spellcheck, just enough to preprocess and then send it to the relevant submodules.
+    handles a movie request from the user
+    run() function takes in incoming lines from user then send it to the relevant submodules.
+
+    two threads:
+    1. for constantly updating raw input from the user and writing to a buffer
+    2. for popping items from the buffer and processing in order
+    thread 1 signals to thread 2 with a new_text Event every time a new text is sent
+
+    Submodules:
+    - function tokeniser returns spellchecked lists of tokens
+    - multiple tagging functions tag tokens for times, numbers, movie titles, addresses
+    - tagged tokens are sent to logic, to be checked for mutual compatibility and then inserted
+    into the MovieRequest object
+    - logic output is given to function narrow, to decide which questions to ask
+    - Int question keeps track of which question we are on. -1 for no question, index of
+    MovieRequest.done for relevant question
+
 
     '''
 
@@ -47,8 +60,9 @@ class Bot:
         req = MovieRequest('test')
         chatLines = []
         conversation = Conversation(chatLines)
-
+        question = -1
         chat_buffer = deque()
+
         # accept input at all times
         # open separate thread which writes it to a buffer
         new_text = threading.Event()
@@ -94,6 +108,8 @@ class Bot:
 
             # understand the prepositions to find where the info is
             # todo submodule, for now check everything
+            # for example, the number before "tickets"
+            # at [theatre]
 
             # return the numbers found in the input
             tag_number = tag_tokens_number(tokens)
@@ -105,13 +121,13 @@ class Bot:
 
             # logic for what to do if there is more than one of the above,
             # must narrow it down todo next
-            evald = narrow(req, tag_movs, tag_theats, tag_number, tag_times, self.ntm, self.ntt)
+            question, e2 = narrow(req, tag_movs, tag_theats, tag_number, tag_times, self.ntm, self.ntt)
 
             # ask a question to find out later information
-            if evald is not 'ok':
-                print(evald)
-                print("Got it, thanks.")
+            if e2 is not 'ok':
+                print(e2)
             else:
+                print("Got it, thanks.")
                 print req.readout()
                 return
 

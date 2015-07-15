@@ -37,7 +37,9 @@ sure that the information is mutually compatible
 
 '''
 ORDER:
-run Bot file
+run Bot file with interpreter
+bot = Bot()
+bot.run()
 interact with bot on the console
 will finish by either fulfilling a request, or if you input "bye"
 

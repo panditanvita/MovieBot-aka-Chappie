@@ -37,8 +37,8 @@ def narrow_down(found_movies):
 '''
 narrow()
 input: MovieRequest object and several lists of tags. Movie and Theatre names must be
-keys into their respective maps
-takes and fills in a MovieRequest object based on the most likely
+keys into their respective maps. KEYS ARE LOWERCASE
+takes and fills in a MovieRequest object based on the most likely.
 outputs.
 if there is only one movie and/or theatre, input into request, return 1
 if there is more than one, send in a question to narrow it down
@@ -46,31 +46,37 @@ need to make sure the ticket is valid!
 
 assuming time is for today
 
-returns returned1,returned2, a tuple of results for movies, theatres
+returns updated_request, returned1,returned2, r3
+a tuple of results for movies, theatres and numbers
 '''
 def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntm, ntt):
     returned1 = 0, "Which movie?"
     returned2 = 0, "At which theatre?"
 
+    # take care of movies, either we find 0, 1 or more than 1
     if narrow_down(tag_movs)[0] == 1:
-        m_nice = ntm[tag_movs[0]]
+        m_nice = ntm[tag_movs[0]].title
         req.add_title(m_nice)
         returned1 = 1, ""
+
+    mk = req.title.lower()  # use for indexing!
 
     if narrow_down(tag_movs)[0] > 1:
         statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(tag_movs)])
         returned1 = 2, "Possible options: " + statement
 
+    # take care of theatres, either we find 0, 1 or more than 1
     if narrow_down(tag_theats)[0] == 1:
-        t = tag_theats[0]
+        t = tag_theats[0] # use for indexing!
         t_nice = ntt[t].bms_name
         if req.done[0]:
             # check if movie is in theatre today
             d = ntt[t].movies
-            if len(d.get(req.title, [])) == 0:
+            if len(d.get(mk, [])) == 0:
                 returned2 = 0, "Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
             else:
-                returned2 = 2, "Possible showings: " + d.get(req.title)
+                returned2 = 1, "Possible showings today: "+ ' '.join(d.get(mk))
+                req.add_theatre(t_nice)
         else:
             req.add_theatre(t_nice)
             returned2 = 1, ""
@@ -78,19 +84,28 @@ def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntm, ntt):
     if narrow_down(tag_theats)[0] > 1:
         # check which all are playing if movie is mentioned
         # then return subset or full set of tag_theats
-        ft = tag_theats
         if req.done[0]:
-            ft = [t for t in tag_theats if len(ntt[t].movies.get(req.title, [])) < 0]
-        statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft)])
-        returned2 = 2, "That movie is playing in: " + statement
+            ft = [t for t in tag_theats if len(ntt[t].movies.get(mk, [])) > 0]
+            if len(ft) == 0:
+                ft = tag_theats
+                statement = "{} isn't playing there today".format(req.title)
+            else:
+                statement = "{} is playing in: ".format(req.title) \
+                            + '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft)])
+            returned2 = 2, statement
+        else:
+            statement = "Possible theatre options: " \
+                        + '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(tag_theats)])
+            returned2 = 2, statement
 
     r3 = narrow_num(req, returned1, returned2, tag_number, tag_times)
 
     return evaluate(req, returned1, returned2, r3)
 
 '''
-Given at least a movie title, and the list of times/numbers mentioned, try to narrow down which
-time to choose
+Given at least a movie title, and the list of times/numbers mentioned, try to narrow down
+how many tickets and
+which time to choose
 input: returned1 and returned2 are tuples 0|1|2, Message for movies and theatres
 tagged_number is a list of numbers
 '''
@@ -105,7 +120,7 @@ def narrow_num(req, returned1, returned2, tag_number, tag_time):
     if len(tag_time) == 1:
         pass  # todo something to parse times into known format for known showtimes
     # returned1, returned2
-    return req.done[1], ""
+    return req.done[1], "How many tickets?"
 
 '''
 decide what more information is required
@@ -115,12 +130,14 @@ Checks movie, then theatre, then number of tickets
 '''
 def evaluate(req, r1, r2, r3):
     if req.done[0] == 0:  # no movie
-        return r1[1]
-    if req.done[2] == 0:  # no theatre
-        return r2[1]
-    #if req.done[1] == 0:
-    #   return r3[1]
-    return "ok"
+        return 0, r1[1]
+    elif req.done[2] == 0:  # no theatre
+        return 2, r2[1]
+    elif req.done[1] == 0:  # no ticket number
+        return 1, r3[1]
+    else:
+        # we are done!
+        return -1, "ok"
 
 
 print("Logic module loaded")
