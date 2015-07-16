@@ -4,7 +4,7 @@ import threading
 
 from knowledge import get_theatres
 from classes import Conversation, ChatLine, MovieRequest
-from tokeniser import tokeniser, tag_tokens_number, tag_tokens_time, tag_tokens_movies
+from tokeniser import tokeniser, tag_tokens_number, tag_tokens_movies
 from collections import deque
 from logic import narrow
 '''
@@ -60,7 +60,7 @@ class Bot:
         req = MovieRequest('test')
         chatLines = []
         conversation = Conversation(chatLines)
-        question = -1
+        question = -1  # 0 for movies, 1 for num tickets, 2 for theatre
         chat_buffer = deque()
 
         # accept input at all times
@@ -108,27 +108,33 @@ class Bot:
 
             # understand the prepositions to find where the info is
             # todo submodule, for now check everything
-            # for example, the number before "tickets"
-            # at [theatre]
+            # at [theatre], watch|see [movie], at [time]
 
-            # return the numbers found in the input
-            tag_number = tag_tokens_number(tokens)
-            tag_times = tag_tokens_time(tokens)
+            # return the different numbers found in the input
+            # tries to tell the difference between number of tickets, t_num
+            # times of day, t_day
+            # showtimes []Time times
+            # for example, looks for a number before "tickets"
+            all_nums, tday, t_num,times = tag_tokens_number(tokens, question)
 
             # return the movies and theatres mentioned in the input
             # can only return known movies and theatres
-            tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt)
+            tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt, question)
 
             # logic for what to do if there is more than one of the above,
-            # must narrow it down todo next
-            question, e2 = narrow(req, tag_movs, tag_theats, tag_number, tag_times, self.ntm, self.ntt)
+            # must narrow it down
+            # input items into the MovieRequest object based on the current
+            # state of the tags
+            # returns the new question that it needs to know to finish the request
+            # returns e2, the question itself
+            question, e2 = narrow(req, tag_movs, tag_theats, tday, t_num, times, self.ntm, self.ntt)
 
             # ask a question to find out later information
             if e2 is not 'ok':
                 print(e2)
             else:
                 print("Got it, thanks.")
-                print req.readout()
+                print(req.readout())
                 return
 
 '''

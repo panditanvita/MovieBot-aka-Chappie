@@ -2,7 +2,7 @@ __author__ = 'V'
 
 import re
 from knowledge import clean
-
+from showtime import Time
 '''
 helper function to cut out the slang
 '''
@@ -29,27 +29,29 @@ Returns a cleaned-up string for the chat line content
 Returns list of tokens of the cleaned-up string
 
 '''
+time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
+
 def tokeniser(inp):
     words = inp.lower()
     # remove punctuation
     words = re.sub(r'''\[\][,;#"'\?()-_`]''', "", words)
+
     # don't remove punctuation used for time
     words = re.sub(r'(?<=\D)(\.|:)(?=\D?)', r" ", words)
     # cut down whitespace jic
     words = re.sub("\s+", " ", words)
     # correct slang
     words = cut_slang(words)
-
     # need the ?: to make sure it doesn't return only the ones in parens
     # sneaky regex
     # keep words that aren't ""
-    # keep words with hyphens
-    # keep time
-    pattern = r"\d+[\.:]\d*|(?:[A-Z]\.)+|\w+(?:[-']\w+)*|'|^\w*"
-    tokens = re.findall(pattern, words)
+    digits = r"(?:\d\d\d+[\.: ]?)+"
+    acronyms = r"(?:[A-Z]\.)+"
+    hyphen = r"\w+(?:[-']\w+)*" #others are mysteriously busted, fix later
+    #pattern = r"{}|{}|{}|{}|'|\w+".format(time, digits, acronyms, hyphen)
+    tokens = re.findall(r"{}|{}|\w+".format(digits,time), words)
     tokens = [token for token in tokens if len(token) > 0]
     return ' '.join(tokens), tokens
-
 
 '''
 checks for numbers
@@ -57,26 +59,71 @@ checks for numbers
 tags all tokens with numbers in it. tags tokens which are word numbers, like 'one', 'ten',
 all the way up to 'twelve'
 
-tokens is the tokenised input, a list of strings
+input: tokens is the tokenised input, a list of strings
+if question is 1, it is looking specifically for the number of tickets
+if question is 4, it is looking for time of day
+returns all_nums, times_of_day, ticket_nums, times
+
+Stringp[] all_nums: anything that matches as a number
+
+String[] times_of_day: returned from helper function to find times of day
+
+Int ticket_num: if asked, returns first number found. if there is a number
+in front of the words "tickets" in input, that number overwrites everything
+
+time: looks for times matching time regex
+
 using regex. used to use the upenn tagset, but it takes like two
 seconds per string and its slower
-
 upenn tags: maybe useful for another purpose
 ex: nltk.help.upenn_tagset('NN.*')
 DT determiner (some, the), PRP pronoun,  CD numeral
 JJ adjective, NN noun, VB verb, IN prep/conjunction
 '''
-def tag_tokens_number(tokens):
+def tag_tokens_number(tokens, question):
     pattern = r"[0-9]+|thirteen|fourteen|fifteen|" \
               r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty"
-
     #|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|" \
     #          r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand"
 
-    words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight','nine','ten','eleven','twelve']
-    tn = [token for token in tokens if re.search(pattern, token) is not None]
-    tw = [str(words.index(tok)+1) for tok in tokens if tok in words]
-    return tn+tw
+    # first replaces all common time-words with numbers
+    words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven',
+             'eight','nine','ten','eleven','twelve']
+    tws = []
+    for tok in tokens:
+        if tok in words: tws.append(str(words.index(tok)+1))
+        else: tws.append(tok)
+
+    all_nums = [i for i,token in enumerate(tws) if re.search(pattern, token) is not None]
+
+    times_of_day = tag_tokens_time(tokens)
+
+    # if we are looking specifically for number of tickets, then it just chooses the
+    # first number found
+    # otherwise, it looks to see if there was a number mentioned before the word "tickets"
+    ticket_num = -1
+    if question == 1: ticket_num = all_nums[0]
+    try:
+        i = tokens.index("tickets")
+        if tokens[i-1] in all_nums: ticket_num = int(tokens[i-1])
+        if tokens[i-1] in words: ticket_num = words.index(tokens[i-1])+1
+    except ValueError:
+        pass
+
+    # looking specifically for a time
+    timeList = []
+    #if question == 4:
+    def f(tok): #what if you want 2 tickets for 2 pm dummy todo
+        return re.match(time,tok) is not None and tok != (str(ticket_num))
+
+    times = [tok for tok in tokens if f(tok)]
+    for t in times:
+        try:
+            timeList.append(Time(t))
+        except:
+            pass
+
+    return all_nums, times_of_day, ticket_num, timeList
 
 '''
 checks for times
@@ -84,15 +131,13 @@ days of the week, times of the day
 '''
 def tag_tokens_time(tokens):
     p1 = "(2|to)(nite|night)"
-    tokens = [re.sub(p1, "tonight", tok) for tok in tokens]
+    tokens = [re.sub(p1, "night", tok) for tok in tokens]
     p2 = "(2|to)(morrow|moro|morro)"
     tokens = [re.sub(p2, "tomorrow", tok) for tok in tokens]
-    pattern = r"morning|evening|night|tonight|today|" \
+    pattern = r"morning|afternoon|evening|night|tonight|today|" \
               r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds|wednesday|" \
               r"thurs(day)?|sat(urday)?"
-
-    return [token for token in tokens if re.search(pattern, token) is not None]
-
+    return [token for token in tokens if re.match(r'^{}$'.format(pattern), token) is not None]
 
 '''
 levenshtein edit distance between two strings a,b,
@@ -214,12 +259,14 @@ def look(title, tokens):
     # if this is useful
     return False
 
-# helper function todo
-# need a lot more logic, because often the full address isn't
-# mentioned or req'd - change it so that the most common addresses are more likely
-# takes list of theatre addresses and breaks it down so that an address in the format
-# ["koramangala", "forum mall"] turns into ["koramanagala", "forum", mall"]
-# keeps order of theaters, same length as theatres
+'''
+ helper function
+ need a lot more logic, because often the full address isn't
+ mentioned or req'd - change it so that the most common addresses are more likely
+ takes list of theatre addresses and breaks it down so that an address in the format
+ ["koramangala", "forum mall"] turns into ["koramanagala", "forum", mall"]
+ keeps order of theaters, same length as theatres
+'''
 def secondary_addrs(theatre_addrs):
     t_addrs1 = [] #cut up list so that all words are split up
     for t in theatre_addrs:
@@ -232,9 +279,10 @@ def secondary_addrs(theatre_addrs):
         t_addrs1.append(t_i)
     return t_addrs1
 
-
-# helper function
-# primary selects for the most information possible, and in order
+'''
+ helper function
+ primary selects for the most information possible, and in order
+'''
 def primary(tokens, tc, theatre_addrs):
     ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens)]
     tb = set(tc) & (set(ta))
@@ -248,12 +296,15 @@ def primary(tokens, tc, theatre_addrs):
         tfinal = tb  # items in both sets
     return tfinal
 
-# helper function
-# alternative to primary, searches for theatre addresses in the tokens
-# more lenient, searches for titles for number of occurences
-def secondary(tokens, theatre_addrs):
-    t_addrs1 = secondary_addrs(theatre_addrs)
-    s = [sum([look(t,tokens) for t in t_addr]) for t_addr in t_addrs1]
+'''
+ helper function
+ alternative to primary, searches for theatre addresses in the tokens
+ more lenient, searches for titles for number of occurences
+ returns titles with addresses whose keywords have appeared in the input
+ the maxiumum number of times. returns all such titles (max > 0)
+'''
+def secondary(tokens, titleset):
+    s = [sum([look(word, tokens) for word in title]) for title in titleset]
     m = max(s)
     if m == 0: return []
     sec = [i for i,s1 in enumerate(s) if s1 == m]
@@ -267,15 +318,21 @@ these might be present in full, in part, or with typos
 must be lenient
 cleans theatre names of certain words(theatre, cinemas)
 
+primary:
 coiterates through tokens, trying to match it to first movie title
 word or movie company word
 could potentially match to more than one item, in that case
-return all possible
-returns list of all movies found, list of all theatres found
+return all possible returns list of all movies found, list of all theatres found
+
+secondary:
+if the question flag has marked it so that we are specifically looking for a movie
+or theatre, it becomes more lenient, using the secondary function instead
+secondary function looks for most common occurences/ most overlapping keywords
+
 as String[] movietitles, String[] theatre names
 '''
-def tag_tokens_movies(tokens, ntm, ntt):
-    movies = ntm.keys()
+def tag_tokens_movies(tokens, ntm, ntt, question):
+    movies = [k.split() for k in ntm.keys()]
     theatres = ntt.values()
 
     ts = clean([t.company for t in theatres])
@@ -284,21 +341,23 @@ def tag_tokens_movies(tokens, ntm, ntt):
     theatre_addrs = [t.address for t in theatres]
 
     # check if any movies are mentioned
-    found_movies = [title for title in movies if look(title.split(), tokens)]
+    mov_pri = [' '.join(title) for title in movies if look(title, tokens)]
+    mov_sec = secondary(tokens,movies)
+
+    if question == 0: found_movies = mov_sec
+    else: found_movies = mov_pri
 
     # first, check if theatre companies are mentioned. then check
     # if their addresses are mentioned.
-    # todo not all words in movie name required
-
     tc = [i for i, title in enumerate(theatre_comps) if look(title, tokens)]
-
     pri = primary(tokens, tc, theatre_addrs)
-    sec = secondary(tokens, theatre_addrs)
+    t_addrs1 = secondary_addrs(theatre_addrs)
+    sec = secondary(tokens, t_addrs1)
 
-    if len(pri) ==0: ##AAHHHH SOO MUCH MISSING FKKFKFK
-        fin = sec
-    else:
-        fin = pri
+    fin = []
+    if question == 2: fin = sec
+    else: fin == pri
+
     # need to index into a separate list that contains the theatre name
     found_theatres = [theatres[t].bms_name.lower() for t in fin]
 

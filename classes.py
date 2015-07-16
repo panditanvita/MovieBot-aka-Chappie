@@ -111,7 +111,12 @@ class Conversation:
 '''
 classes for bot
 
-Title is movie title
+Title is String movie title, cased
+num_tickets is Integer number of tickets
+Theatre is String Theatre.bms_name, cased
+date
+time is instance of Time, time of showing
+payment_method is 0 for COD, 1 for online
 '''
 
 
@@ -121,7 +126,7 @@ class MovieRequest:
         self.title = "[]"  # Cased
         self.num_tickets = 0  # integer
         self.theatre = "[]"  # bms_name
-        self.date = "[]"
+        self.date = "today"
         self.time = "[]"
         self.payment_method = 0
 

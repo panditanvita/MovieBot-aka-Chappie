@@ -17,14 +17,14 @@ class Test(unittest.TestCase):
             "pls plz 2moro 2nite ok gr8", "ra.#@^ndom puncti.f:ftion.",
             " c   ut wh  ite spa  ce",
             "keep 9.30 10:45 time intact."]
-    anss = [['some slang tickets jatiks want you to thanks thanks please please tomorrow tonight ok great',
+    anss = [('some slang tickets jatiks want you to thanks thanks please please tomorrow tonight ok great',
              ['some', 'slang', 'tickets', 'jatiks', 'want',
               'you', 'to', 'thanks', 'thanks', 'please', 'please',
-              'tomorrow', 'tonight', 'ok', 'great']],
-            ['ra ndom puncti f ftion', ['ra', 'ndom', 'puncti', 'f', 'ftion']],
-            ['c ut wh ite spa ce', ['c', 'ut', 'wh', 'ite', 'spa', 'ce']],
-            ['keep 9.30 10:45 time intact',
-             ['keep', '9.30', '10:45', 'time', 'intact']]]
+              'tomorrow', 'tonight', 'ok', 'great']),
+            ('ra ndom puncti f ftion', ['ra', 'ndom', 'puncti', 'f', 'ftion']),
+            ('c ut wh ite spa ce', ['c', 'ut', 'wh', 'ite', 'spa', 'ce']),
+            ('keep 9.30 10:45 time intact',
+             ['keep', '9.30', '10:45', 'time', 'intact'])]
 
     def test_tokeniser(self):
         for i, j in zip(self.inps, self.anss):
@@ -32,10 +32,11 @@ class Test(unittest.TestCase):
 
     tokens = ["i'm", 'going', 'at', 'ten', 'o', 'clock', 'to', 'the',
               '9.45', 'showing', 'and', 'then', 'the', 'ten-thirty', 'showing']
-    ans2 ={'ten', '9.45', 'ten-thirty'}
+    ans2 = ['10', '9.45', 'ten-thirty']
 
     def test_tags_tokens(self):
-        self.assertTrue(set(tag_tokens_number(self.tokens)) == self.ans2)
+        question = -1
+        self.assertTrue(tag_tokens_number(self.tokens, question) == self.ans2)
 
     t1 = ['i', 'want', 'to', 'see', 'Spy']
     t2 = ["give", "tickets", "for", "jurassic", "world", "please"]
@@ -57,10 +58,10 @@ class Test(unittest.TestCase):
         starts = [tokeniser('i want to see')[1], tokeniser('please')[1], tokeniser('tickets for')[1]]
 
         tokens = [starts[0]+movies[0], movies[1]+starts[1], starts[2]+movies[2]+starts[1]]
-
-        r0 = tag_tokens_movies(tokens[0], self.ntm, self.ntt)
-        r1 = tag_tokens_movies(tokens[1], self.ntm, self.ntt)
-        r2 = tag_tokens_movies(tokens[2], self.ntm, self.ntt)
+        q = -1
+        r0 = tag_tokens_movies(tokens[0], self.ntm, self.ntt, q)
+        r1 = tag_tokens_movies(tokens[1], self.ntm, self.ntt, q)
+        r2 = tag_tokens_movies(tokens[2], self.ntm, self.ntt, q)
 
         self.assertEqual(r0[0], [k[0]])
         self.assertEqual(r1[0], [k[1]])

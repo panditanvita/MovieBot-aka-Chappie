@@ -1,5 +1,6 @@
 __author__ = 'V'
 
+
 '''
 logic submodule
 
@@ -49,21 +50,21 @@ assuming time is for today
 returns updated_request, returned1,returned2, r3
 a tuple of results for movies, theatres and numbers
 '''
-def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntm, ntt):
-    returned1 = 0, "Which movie?"
-    returned2 = 0, "At which theatre?"
+def narrow(req, tag_movs, tag_theats, tday, ticket_num, times, ntm, ntt):
+    r1 = 0, "Which movie?"
+    r2 = 0, "At which theatre?"
 
     # take care of movies, either we find 0, 1 or more than 1
     if narrow_down(tag_movs)[0] == 1:
         m_nice = ntm[tag_movs[0]].title
         req.add_title(m_nice)
-        returned1 = 1, ""
+        r1 = 1, ""
 
     mk = req.title.lower()  # use for indexing!
 
     if narrow_down(tag_movs)[0] > 1:
         statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(tag_movs)])
-        returned1 = 2, "Possible options: " + statement
+        r1 = 2, "Possible options: " + statement
 
     # take care of theatres, either we find 0, 1 or more than 1
     if narrow_down(tag_theats)[0] == 1:
@@ -73,13 +74,13 @@ def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntm, ntt):
             # check if movie is in theatre today
             d = ntt[t].movies
             if len(d.get(mk, [])) == 0:
-                returned2 = 0, "Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
+                r2 = 0, "Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
             else:
-                returned2 = 1, "Possible showings today: "+ ' '.join(d.get(mk))
+                r2 = 1, "Possible showings today: "+ ' '.join(d.get(mk))
                 req.add_theatre(t_nice)
         else:
             req.add_theatre(t_nice)
-            returned2 = 1, ""
+            r2 = 1, ""
 
     if narrow_down(tag_theats)[0] > 1:
         # check which all are playing if movie is mentioned
@@ -92,35 +93,42 @@ def narrow(req, tag_movs, tag_theats, tag_number, tag_times, ntm, ntt):
             else:
                 statement = "{} is playing in: ".format(req.title) \
                             + '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft)])
-            returned2 = 2, statement
+            r2 = 2, statement
         else:
             statement = "Possible theatre options: " \
                         + '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(tag_theats)])
-            returned2 = 2, statement
+            r2 = 2, statement
 
-    r3 = narrow_num(req, returned1, returned2, tag_number, tag_times)
+    r3, r4 = narrow_num(req, r1, r2, tday, ticket_num, times)
 
-    return evaluate(req, returned1, returned2, r3)
+    return evaluate(req, r1, r2, r3, r4)
 
 '''
 Given at least a movie title, and the list of times/numbers mentioned, try to narrow down
-how many tickets and
-which time to choose
+how many tickets and which time to choose
+
 input: returned1 and returned2 are tuples 0|1|2, Message for movies and theatres
-tagged_number is a list of numbers
+Integer ticket_num, String[] tday, String[] times
+
+
 '''
-def narrow_num(req, returned1, returned2, tag_number, tag_time):
-    # huge todo
-    if len(tag_number) == 1:
-        try:
-            i = int(tag_number[0])
-            req.add_tickets(i)
-        except ValueError:
-            pass  # todo
-    if len(tag_time) == 1:
-        pass  # todo something to parse times into known format for known showtimes
+def narrow_num(req, r1, r2, tday, ticket_num, times):
+    # number of tickets
+    if ticket_num != -1:
+        assert(isinstance(ticket_num,int))
+        req.add_tickets(ticket_num)
+
+    # pick a showtime
+
+    #check if time exists for given theatre todo before adding
+    # with tday
+    if len(times) == 1:
+        req.add_time(times)
+
     # returned1, returned2
-    return req.done[1], "How many tickets?"
+    r3 = req.done[1], "How many tickets?"
+    r4 = req.done[4], "What time?"
+    return r3, r4
 
 '''
 decide what more information is required
@@ -128,13 +136,15 @@ passes on final information to the bot
 
 Checks movie, then theatre, then number of tickets
 '''
-def evaluate(req, r1, r2, r3):
+def evaluate(req, r1, r2, r3, r4):
     if req.done[0] == 0:  # no movie
         return 0, r1[1]
     elif req.done[2] == 0:  # no theatre
         return 2, r2[1]
     elif req.done[1] == 0:  # no ticket number
         return 1, r3[1]
+    elif req.done[4] == 0: # no time
+        return 4, r4[1]
     else:
         # we are done!
         return -1, "ok"
