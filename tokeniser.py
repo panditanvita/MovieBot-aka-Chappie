@@ -29,18 +29,15 @@ Returns a cleaned-up string for the chat line content
 Returns list of tokens of the cleaned-up string IN ORDER
 
 '''
-time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
-#time = "(?:\d|\d{1,2}[\.:\s]?\d{2})(?:\s?[a|p]m)?" possible better alternative
+#time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
+time = r"(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d)(?:\s?[a|p]m)?" #possible better alternative
 
 #fix time so that it gets it right, looks for maybe three different times,
 #cuts up the string around it and applies the usual
-
-#todo findall is failing because it only returns non-overlapping matches
 def tokeniser(inp):
     words = inp.lower()
     # remove punctuation
     words = re.sub(r'''\[\][,;#"'\?()-_`]''', "", words)
-
     # don't remove punctuation used for time
     words = re.sub(r'(?<=\D)(\.|:)(?=\D?)', r" ", words)
     # cut down whitespace jic
@@ -50,8 +47,7 @@ def tokeniser(inp):
     # need the ?: to make sure it doesn't return only the ones in parens
     # sneaky regex
     # keep words that aren't ""
-
-    digits = r"(?:\d\d\d+[\.: ]?)+"
+    digits = r"(?:\d{4,}[\.: ]?)+"
     acronyms = r"(?:[A-Z]\.)+"
     hyphen = r"\w+(?:[-']\w+)*" #others are mysteriously busted, fix later
     #pattern = r"{}|{}|{}|{}|'|\w+".format(time, digits, acronyms, hyphen)
@@ -241,9 +237,7 @@ def look(title, tokens):
     title = [t for t in title if z(t)]
 
     if len(title)==0: return False
-
     if len(title) == 1: return sum([typo(title[0],t) for t in tokens])>0
-
     # note that sometimes with long-titled movies, people
     # will shorten it to one or two words, should check for that todo
     if len(tokens) < len(title): return False

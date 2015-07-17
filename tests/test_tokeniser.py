@@ -2,12 +2,9 @@ __author__ = 'V'
 
 
 '''
-Need to test tokeniser on all kinds of expected inputs
-
-TODO
-
-
+Test tokeniser and all subfunctions on all kinds of expected inputs
 '''
+
 import unittest
 from MovieBot.tokeniser import *
 from MovieBot.knowledge import get_theatres
@@ -37,13 +34,40 @@ class TestTokeniser(unittest.TestCase):
         self.assertTrue(re.match(time,"9.30") is not None)
         self.assertTrue(re.match(time,"9 pm") is not None)
         self.assertTrue(re.match(time,"1930") is not None)
-        self.assertTrue(re.match(time,"1930 pm") is not None)
+        self.assertTrue(re.match(time,"1930pm").start() == 0)
         self.assertTrue(re.match(time,"9 00 am") is not None)
-        self.assertTrue(re.match(time,"11 30 am") is not None)
+        self.assertTrue(re.match(time,"11 30 am").end() == 8)
         self.assertTrue(re.match(time,"11") is not None)
         self.assertTrue(re.match(time,"9") is not None)
-        self.assertTrue(re.match(time,"9 ") is None)
-        self.assertTrue(re.match(time,"99999") is None)
+        self.assertTrue(re.match(time,"9 ").end() == 1)
+        self.assertTrue(re.match(time,"99999").end() == 4)
+
+    def test_typo(self):
+        #check for substitution, insertion, deletion
+        equal1 = ["marathalli","oboe","bigwordscanmessup","no","i","fillet"]
+        equal2 = ["marthalli","obooe","blgwlrdscanmesssup","No","I","filyet"]
+        nequal = ["mardhali","oboooe","blgwlrdscaesssup","Nj","j","fiyyet"]
+        [self.assertTrue(typo(x,y)) for x,y in zip(equal1,equal2)]
+        [self.assertFalse(typo(x,y)) for x,y in zip(equal1,nequal)]
+
+    def test_clean_nums(self):
+        tokens = ['all','sorts','eight','thirty','two','it','takes']
+        ans = ['all','sorts','8','30','2','it','takes']
+        self.assertTrue(clean_nums(tokens) == ans)
+
+    def test_sec_addrs(self):
+        addrs = [["at a place","and another"],["soo","many places"]]
+        ans = [["at","a","place","and","another"],["soo","many","places"]]
+        self.assertTrue(secondary_addrs(addrs)==ans)
+
+    def test_primary(self):
+        #todo
+        pass
+
+    def test_secondary(self):
+        #todo
+        pass
+
 
     tokens = ["i'm", 'going', 'at', 'ten', 'o', 'clock', 'to', 'the',
               '9.45', 'showing', 'and', 'then', 'the', 'ten-thirty', 'showing']

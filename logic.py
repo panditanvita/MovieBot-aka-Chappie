@@ -1,6 +1,5 @@
 __author__ = 'V'
 
-
 '''
 logic submodule
 
@@ -8,7 +7,6 @@ finally, decisions: do we have enough information?
 which questions must we ask to get more information?
 maybe the selected movie is not playing in the selected theatre?
 give alternate showtimes
-
 
 submodule for each attribute, each function
 makes sure that what it inputs into the movie request is
@@ -37,7 +35,6 @@ def narrow_movies(req,tag_movs,ntm):
 update the movie theatre in the request object
 returns tuple r2 of boolean has_correct_theatre, message
 '''
-
 def narrow_theatres(req,tag_theats,ntt):
     mk = req.title.lower()
     r2 = 0, "At which theatre?"
@@ -94,8 +91,7 @@ a tuple of results for movies, theatres and numbers
 '''
 def narrow(req, tag_movs, tag_theats, tday, ticket_num, times, ntm, ntt):
     # take care of movies, either we find 0, 1 or more than 1
-    #print (tag_movs)
-    #print(tag_theats)
+    #print (tag_movs, tag_theats)
     r1 = narrow_movies(req, tag_movs, ntm)
     r2 = narrow_theatres(req,tag_theats,ntt)
     r3, r4 = narrow_num(req, r1, r2, tday, ticket_num, times)
@@ -119,8 +115,7 @@ def narrow_num(req, r1, r2, tday, ticket_num, times):
 
     #check if time exists for given theatre todo before adding
     # with tday
-    if len(times) == 1:
-        req.add_time(times[0])
+    if len(times) == 1: req.add_time(times[0])
 
     # returned1, returned2
     r3 = req.done[1], "How many tickets?"

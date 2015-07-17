@@ -17,8 +17,6 @@ its conversations, error logs and movie requests made.
 -Chat may be over multiple lines.
 
 '''
-
-
 class Bot:
     # classifier = run_classifier()   maybe
     '''
@@ -52,8 +50,6 @@ class Bot:
     - logic output is given to function narrow, to decide which questions to ask
     - Int question keeps track of which question we are on. -1 for no question, index of
     MovieRequest.done for relevant question
-
-
     '''
 
     def run(self):
@@ -141,4 +137,6 @@ class Bot:
 '''
 bot = Bot()
 bot.run()
+
+bye
 '''
