@@ -104,3 +104,9 @@ class Time:
         frames = [r(6,12),r(12,16),r(15,22),r(18,24)]
         return frames[frame]
 
+    def printout(self):
+        m = self.minutes
+        if m < 10: sm = str(0) + str(m)
+        else: sm = str(m)
+        out = "{}:{}".format(self.hours,sm)
+        return out

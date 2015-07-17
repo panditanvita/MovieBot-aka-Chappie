@@ -4,6 +4,7 @@ __author__ = 'V'
 classes for knowledge - google showtimes scraping
 
 '''
+from showtime import Time
 
 '''
 Movie
@@ -127,7 +128,7 @@ class MovieRequest:
         self.num_tickets = 0  # integer
         self.theatre = "[]"  # bms_name
         self.date = "today"
-        self.time = "[]"
+        self.time = ""
         self.payment_method = 0
 
         self.done = [0, 0, 0, 0, 0, 0]  # check for the six earlier attrs
@@ -166,7 +167,11 @@ class MovieRequest:
         self.done[5] = 1
 
     def readout(self):
+        if isinstance(self.time, Time):
+           t = self.time.printout()
+        else: t = ""
         readout = '{} tickets for {} at {},' \
-                  ' for the {} showtime, {}'.format(self.num_tickets, self.title, self.theatre, self.time, self.date)
+                  ' for the {} showtime, ' \
+                  '{}'.format(self.num_tickets, self.title, self.theatre,t, self.date)
         return readout
 

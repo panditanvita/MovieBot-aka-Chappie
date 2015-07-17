@@ -2,14 +2,14 @@ __author__ = 'V'
 
 import unittest
 
-from MovieBot.time import *
+from MovieBot.showtime import *
 
 class Test(unittest.TestCase):
     t0 = Time('9')
-    t1 = Time('9 30')
+    t1 = Time('9.30')
     t2 = Time('09 30')
-    t3 = Time('9 30 pm')
-    t4 = Time('11 30 am')
+    t3 = Time('930 pm')
+    t4 = Time('11:30 am')
     t5 = Time('9 am')
     t = [t0,t1,t2,t3,t4,t5]
     h = [21,21,21,21,11,9]

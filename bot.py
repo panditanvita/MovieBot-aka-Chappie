@@ -119,6 +119,7 @@ class Bot:
 
             # return the movies and theatres mentioned in the input
             # can only return known movies and theatres
+            # use question to tell which question we are on, for more useful tagging
             tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt, question)
 
             # logic for what to do if there is more than one of the above,
@@ -130,7 +131,7 @@ class Bot:
             question, e2 = narrow(req, tag_movs, tag_theats, tday, t_num, times, self.ntm, self.ntt)
 
             # ask a question to find out later information
-            if e2 is not 'ok':
+            if e2 is not "ok":
                 print(e2)
             else:
                 print("Got it, thanks.")
@@ -140,5 +141,4 @@ class Bot:
 '''
 bot = Bot()
 bot.run()
-
 '''

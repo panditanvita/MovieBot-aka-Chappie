@@ -26,11 +26,16 @@ Tokeniser takes in a line of chat text as a string
 It attempts to spell-check the string
 
 Returns a cleaned-up string for the chat line content
-Returns list of tokens of the cleaned-up string
+Returns list of tokens of the cleaned-up string IN ORDER
 
 '''
 time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
+#time = "(?:\d|\d{1,2}[\.:\s]?\d{2})(?:\s?[a|p]m)?" possible better alternative
 
+#fix time so that it gets it right, looks for maybe three different times,
+#cuts up the string around it and applies the usual
+
+#todo findall is failing because it only returns non-overlapping matches
 def tokeniser(inp):
     words = inp.lower()
     # remove punctuation
@@ -45,6 +50,7 @@ def tokeniser(inp):
     # need the ?: to make sure it doesn't return only the ones in parens
     # sneaky regex
     # keep words that aren't ""
+
     digits = r"(?:\d\d\d+[\.: ]?)+"
     acronyms = r"(?:[A-Z]\.)+"
     hyphen = r"\w+(?:[-']\w+)*" #others are mysteriously busted, fix later
@@ -54,10 +60,24 @@ def tokeniser(inp):
     return ' '.join(tokens), tokens
 
 '''
+tags word-number tokens, like 'one', 'ten',
+all the way up to 'twenty', and then 'thirty','forty','fifty'
+'''
+def clean_nums(tokens):
+    words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven',
+             'eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen',
+              'sixteen','seventeen','eighteen','nineteen','twenty']
+    other = ['thirty','forty','fifty']
+    tws = []
+    for tok in tokens:
+        if tok in words: tws.append(str(words.index(tok)+1))
+        elif tok in other: tws.append(str((other.index(tok)+3)*10))
+        else: tws.append(tok)
+    return tws
+'''
 checks for numbers
 
-tags all tokens with numbers in it. tags tokens which are word numbers, like 'one', 'ten',
-all the way up to 'twelve'
+tags all tokens with numbers in it.
 
 input: tokens is the tokenised input, a list of strings
 if question is 1, it is looking specifically for the number of tickets
@@ -81,34 +101,22 @@ DT determiner (some, the), PRP pronoun,  CD numeral
 JJ adjective, NN noun, VB verb, IN prep/conjunction
 '''
 def tag_tokens_number(tokens, question):
-    pattern = r"[0-9]+|thirteen|fourteen|fifteen|" \
-              r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty"
-    #|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|" \
-    #          r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand"
-
-    # first replaces all common time-words with numbers
-    words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven',
-             'eight','nine','ten','eleven','twelve']
-    tws = []
-    for tok in tokens:
-        if tok in words: tws.append(str(words.index(tok)+1))
-        else: tws.append(tok)
-
-    all_nums = [i for i,token in enumerate(tws) if re.search(pattern, token) is not None]
-
+    tokens = clean_nums(tokens)
+    # this will not break if the movie title is a number
+    # because we are parsing title names somewhere else!
+    all_nums = filter(lambda x: re.match(r"\d", x) is not None, tokens)
     times_of_day = tag_tokens_time(tokens)
 
     # if we are looking specifically for number of tickets, then it just chooses the
     # first number found
-    # otherwise, it looks to see if there was a number mentioned before the word "tickets"
+    # it looks to see if there was a number mentioned before the word "tickets"
+    # and that overrides
     ticket_num = -1
-    if question == 1: ticket_num = all_nums[0]
+    if question == 1: ticket_num = int(all_nums[0]) # ticket num must be a reasonable number?
     try:
         i = tokens.index("tickets")
         if tokens[i-1] in all_nums: ticket_num = int(tokens[i-1])
-        if tokens[i-1] in words: ticket_num = words.index(tokens[i-1])+1
-    except ValueError:
-        pass
+    except ValueError: pass
 
     # looking specifically for a time
     timeList = []
@@ -118,10 +126,8 @@ def tag_tokens_number(tokens, question):
 
     times = [tok for tok in tokens if f(tok)]
     for t in times:
-        try:
-            timeList.append(Time(t))
-        except:
-            pass
+        try: timeList.append(Time(t))
+        except: pass
 
     return all_nums, times_of_day, ticket_num, timeList
 
@@ -176,41 +182,33 @@ if both words have >= 7 letters, allow for two typos
 # possible ways: -1 is failure, 0 is perf(no typos), >= 1 is number of typos, up to 3
 
 def typo(w1, w2):
-    w1 = w1.lower()
-    w2 = w2.lower()
-    if w1 == w2:
-        return True
+    w1, w2 = w1.lower(), w2.lower()
+    if w1 == w2: return True
 
     # can't reliably check short words
-    if min(len(w1),len(w2)) <= 2:
-        return False
+    if min(len(w1),len(w2)) <= 2: return False
 
     # check for typos. other ideas: tying in the concept of
     # the letters around a letter on the Qwerty keyboard
-    #
+
     # substitution of one letter/ hammond distance
     if len(w1) == len(w2):
         s = 0
         for i, j in zip(w1, w2):
-            if i == j:
-                s += 1
-        if abs(s-len(w1)) <= 1:
-            return True
+            if i == j: s += 1
+        if abs(s-len(w1)) <= 1: return True
 
     # insertion or deletion / levenshtein distance
     # for middling words
-    d = abs(len(w1)-len(w2))
-    m = min(len(w1), len(w2))
+    d, m = abs(len(w1)-len(w2)), min(len(w1), len(w2))
     if d <= 1:
         if levenshtein(w1, w2) <= 1: return True
 
     # for larger words, allow greater leeway (2 typos)
     if d <= 2 and m >= 7:
         if levenshtein(w1, w2) <= 2: return True
-
-    if d <= 3 and m >= 11:  # biggest words, allow 3 typos..
-        return levenshtein(w1, w2) <= 3
-
+    # biggest words, allow 3 typos..
+    if d <= 3 and m >= 11:  return levenshtein(w1, w2) <= 3
     return False
 
 '''
@@ -235,9 +233,6 @@ title is a String[] title to search for in the tokens
 return Boolean if all consecutive words in title are found in the tokens
 '''
 def look(title, tokens):
-    # note that sometimes with long-titled movies, people
-    # will shorten it to one or two words, should check for that todo
-
     # helper function
     # ignore title tokens like '3d' or '2'
     def z(t):
@@ -245,9 +240,13 @@ def look(title, tokens):
 
     title = [t for t in title if z(t)]
 
-    if len(title) == 1:
-        if title in tokens:
-            return True # can't return false because we haven't checked typos
+    if len(title)==0: return False
+
+    if len(title) == 1: return sum([typo(title[0],t) for t in tokens])>0
+
+    # note that sometimes with long-titled movies, people
+    # will shorten it to one or two words, should check for that todo
+    if len(tokens) < len(title): return False
 
     for i, tok in enumerate(tokens[:len(tokens)-len(title)+1]):
         if typo(tok, title[0]):
@@ -282,34 +281,31 @@ def secondary_addrs(theatre_addrs):
 '''
  helper function
  primary selects for the most information possible, and in order
+ returns set of INDICES!
 '''
 def primary(tokens, tc, theatre_addrs):
     ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens)]
     tb = set(tc) & (set(ta))
-    if len(tc) == 0:  # no companies mentioned, so return addresses mentioned
-        tfinal = ta
-    elif len(ta) == 0:  # no addresses mentioned, so return companies mentioned
-        tfinal = tc     # will return empty list if neither mentioned
-    elif len(tb) == 0:  # nothing in intersection, but neither are zero, so return smaller
+    if len(tc) == 1 or len(ta) == 0:
+        tfinal = tc
+    elif len(tc) == 0 or len(tb) == 0:  # no companies mentioned, so return addresses mentioned
         tfinal = ta
     else:
-        tfinal = tb  # items in both sets
+        tfinal = tb  # items in both sets, either 0 or something
     return tfinal
-
 '''
  helper function
  alternative to primary, searches for theatre addresses in the tokens
  more lenient, searches for titles for number of occurences
  returns titles with addresses whose keywords have appeared in the input
- the maxiumum number of times. returns all such titles (max > 0)
+ the maxiumum number of times. returns INDICES OF all such titles (max > 0)
 '''
 def secondary(tokens, titleset):
-    s = [sum([look(word, tokens) for word in title]) for title in titleset]
+    s = [sum([look([word], tokens) for word in title]) for title in titleset if len(title)>0]
     m = max(s)
     if m == 0: return []
     sec = [i for i,s1 in enumerate(s) if s1 == m]
     return sec
-
 '''
 tag_tokens_movies()
 looking for movie titles, theatre names, addresses
@@ -335,28 +331,28 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
     movies = [k.split() for k in ntm.keys()]
     theatres = ntt.values()
 
-    ts = clean([t.company for t in theatres])
+    ts = clean([t.company for t in theatres]) #String[]
 
-    theatre_comps = [c.split() for c in ts]
-    theatre_addrs = [t.address for t in theatres]
+    theatre_comps = [c.split() for c in ts]# String[] []
+    theatre_addrs = [t.address for t in theatres] #String []
+    t_addrs1 = secondary_addrs(theatre_addrs) # String [] []
 
     # check if any movies are mentioned
     mov_pri = [' '.join(title) for title in movies if look(title, tokens)]
-    mov_sec = secondary(tokens,movies)
+    mov_sec = [' '.join(movies[i]) for i in secondary(tokens,movies)]
 
-    if question == 0: found_movies = mov_sec
+    if question == 0 and len(mov_pri) ==0: found_movies = mov_sec
     else: found_movies = mov_pri
 
     # first, check if theatre companies are mentioned. then check
     # if their addresses are mentioned.
     tc = [i for i, title in enumerate(theatre_comps) if look(title, tokens)]
     pri = primary(tokens, tc, theatre_addrs)
-    t_addrs1 = secondary_addrs(theatre_addrs)
     sec = secondary(tokens, t_addrs1)
 
     fin = []
-    if question == 2: fin = sec
-    else: fin == pri
+    if question == 2 and len(pri) == 0: fin = sec
+    else: fin = pri
 
     # need to index into a separate list that contains the theatre name
     found_theatres = [theatres[t].bms_name.lower() for t in fin]
@@ -370,6 +366,7 @@ from knowledge import get_theatres
 ntm, ntt, tl = get_theatres()
 
 t = tokeniser("something something put in a movie name max here ok")[1]
+q=-1
+fm, ft = tag_tokens_movies(t, ntm, ntt, q)
 
-fm, ft = tag_tokens_movies(t, ntm, ntt)
 '''

@@ -12,7 +12,7 @@ import unittest
 from MovieBot.tokeniser import *
 from MovieBot.knowledge import get_theatres
 
-class Test(unittest.TestCase):
+class TestTokeniser(unittest.TestCase):
     inps = ["some slang tix jatiks wnt u to ty thx " +
             "pls plz 2moro 2nite ok gr8", "ra.#@^ndom puncti.f:ftion.",
             " c   ut wh  ite spa  ce",
@@ -30,13 +30,30 @@ class Test(unittest.TestCase):
         for i, j in zip(self.inps, self.anss):
             self.assertTrue(tokeniser(i) == j)
 
+    def test_times(self):
+        self.assertTrue(re.match(time,"9") is not None)
+        self.assertTrue(re.match(time,"9 30") is not None)
+        self.assertTrue(re.match(time,"930") is not None)
+        self.assertTrue(re.match(time,"9.30") is not None)
+        self.assertTrue(re.match(time,"9 pm") is not None)
+        self.assertTrue(re.match(time,"1930") is not None)
+        self.assertTrue(re.match(time,"1930 pm") is not None)
+        self.assertTrue(re.match(time,"9 00 am") is not None)
+        self.assertTrue(re.match(time,"11 30 am") is not None)
+        self.assertTrue(re.match(time,"11") is not None)
+        self.assertTrue(re.match(time,"9") is not None)
+        self.assertTrue(re.match(time,"9 ") is None)
+        self.assertTrue(re.match(time,"99999") is None)
+
     tokens = ["i'm", 'going', 'at', 'ten', 'o', 'clock', 'to', 'the',
               '9.45', 'showing', 'and', 'then', 'the', 'ten-thirty', 'showing']
-    ans2 = ['10', '9.45', 'ten-thirty']
+    #ans2 = ['10', '9.45', 'ten-thirty']
+    ans2 = ['10', '9.45']
 
     def test_tags_tokens(self):
         question = -1
-        self.assertTrue(tag_tokens_number(self.tokens, question) == self.ans2)
+        self.assertTrue(tag_tokens_number(self.tokens, question)[0] == self.ans2)
+        self.assertTrue(tag_tokens_number(self.tokens, question)[2] == -1)
 
     t1 = ['i', 'want', 'to', 'see', 'Spy']
     t2 = ["give", "tickets", "for", "jurassic", "world", "please"]
