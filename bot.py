@@ -118,6 +118,8 @@ class Bot:
             # use question to tell which question we are on, for more useful tagging
             tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt, question)
 
+            #print([t.printout() for t in times]) check times are alright
+
             # logic for what to do if there is more than one of the above,
             # must narrow it down
             # input items into the MovieRequest object based on the current

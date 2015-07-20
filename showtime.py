@@ -54,12 +54,12 @@ class Time:
 
         # for single-chunk times of different lengths
         # flag is None, am or pm - just passes flag onwards to hflag function
-        # format \d+ (9 or 930 or 0930 or 1130)
+        # format \d+ (9 or 10 or 930 or 0930 or 1130)
         # input String Time, output Int hours, Int minutes
         def p1(t0,flag=None):
-            assert(len(t0) in [1,3,4])
+            assert(len(t0) in range(1,5))
             h,m = 0,0
-            if len(t0) == 1:
+            if len(t0) == 1 or len(t0)==2:
                 h = hflag(int(t0),flag)
                 m = 0
             elif len(t0) == 3:

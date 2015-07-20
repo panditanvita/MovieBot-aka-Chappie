@@ -30,7 +30,8 @@ Returns list of tokens of the cleaned-up string IN ORDER
 
 '''
 #time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
-time = r"(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d)(?:\s?[a|p]m)?" #possible better alternative
+#time = r"(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d)(?:\s?[a|p]m)?" #possible better alternative
+time = r'(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d{1,2})(?:\s?[a|p]m)?'
 
 #fix time so that it gets it right, looks for maybe three different times,
 #cuts up the string around it and applies the usual
@@ -123,7 +124,8 @@ def tag_tokens_number(tokens, question):
     times = [tok for tok in tokens if f(tok)]
     for t in times:
         try: timeList.append(Time(t))
-        except: pass
+        except AssertionError:
+            print("your time is wierd")
 
     return all_nums, times_of_day, ticket_num, timeList
 
