@@ -16,20 +16,69 @@ its conversations, error logs and movie requests made.
 -user should always be able to keep typing, and Bot will keep re-updating the submodules.
 -Chat may be over multiple lines.
 
+Two options for running:
+1. with a debug flag (in which case, call bot.run() to play with the features,
+and the bot will interact using System.in and System.out
+2. without the debug flag, in which case the bot will keep track of its state in the MovieRequest and conversation
+objects created at instantiation, and you must call the sleek_get_reponse(message) function to get the bot's
+response to a particular input
+
 '''
 class Bot:
     # classifier = run_classifier()   maybe
+    requests = []
     '''
     Keeping track of all conversations in the record
     Keeping track of all requests in requests
     Keeping track of errors in error_log
     '''
 
-    def __init__(self):
-        self.records = []
-        self.requests = []
-        self.error_log = []
+    def __init__(self, debug=True, resource='test'):
+
         self.ntm, self.ntt, trash = get_theatres() # should not be changed after instantiation
+
+        self.debug = debug
+
+        if not self.debug:
+            self.req = MovieRequest(resource)
+            chatLines = []
+            self.conversation = Conversation(chatLines)
+
+        self.question = -1
+
+    '''
+    sleek_get_response(String message)
+    for responding to the SleekXMPP bot
+    # if debug is false, then bot is called through sleekxmpp
+    #takes in a String message from the customer
+    # returns a String response from the bot, updates stored states to reflect new information given in
+    # the conversation
+    # reponse should be exactly as per the debug==True response
+    '''
+    def sleek_get_response(self, message):
+        assert(self.debug==False)
+
+        tokens = tokeniser(message)[1]
+
+        if len(tokens) < 1: return "..?"
+
+        self.conversation.chatLines.append(ChatLine(content=tokens[0]))
+
+        all_nums, tday, t_num,times = tag_tokens_number(tokens, self.question)
+
+        tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt, self.question)
+
+        self.question, e2 = narrow(self.req, tag_movs, tag_theats, tday, t_num, times, self.ntm, self.ntt)
+
+        # ask a question to find out later information
+        if e2 == "ok":
+            return self.req.readout()
+        else:
+            return e2
+
+
+
+
 
     '''
     run() function
@@ -53,9 +102,12 @@ class Bot:
     '''
 
     def run(self):
+        assert(self.debug==True)
+
         req = MovieRequest('test')
         chatLines = []
         conversation = Conversation(chatLines)
+
         question = -1  # 0 for movies, 1 for num tickets, 2 for theatre
         chat_buffer = deque()
 
@@ -73,8 +125,8 @@ class Bot:
 
         buffer_thread = threading.Thread(name='buffer_thread', target=add_to_buffer)
         buffer_thread.daemon = True
-
         buffer_thread.start()
+
         print("Hi")
         # main thread
         # while buffer_thread has items in it, pop off items and process
