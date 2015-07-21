@@ -18,6 +18,7 @@ import requests
 import re
 from classes import Movie
 from classes import Theatre
+from showtime import Time
 
 start = "http://www.google.com/movies?near=bangalore&date=0&sort=1"
 
@@ -300,8 +301,18 @@ def get_theatres():
                     print('Err: Text too long for movie name')
                     continue  # todo, common known bug, parsed incorrectly somehow
 
-                times = [i.text.replace('&nbsp', '').strip() for i in mov.find_all(attrs={'style': 'color:'})]
-                # write something to parse times without am/pm TODO
+
+                def f(i):
+                    t = i.text.replace('&nbsp', '').strip()
+                    ans1 = False
+                    try:
+                        ans = Time(t)
+                        ans1 = True
+                    except: ans = False
+                    return ans1, ans
+
+                times = [f(i)[1] for i in mov.find_all(attrs={'style': 'color:'}) if f(i)[0]]
+                #print [t.printout() for t in times]
 
                 if movieName.lower() not in namesToMovies.keys():
                     namesToMovies[movieName.lower()] = Movie(movieName)

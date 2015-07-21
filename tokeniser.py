@@ -175,13 +175,18 @@ input, two String words
 returns True if the words are equal, or equal except for one
 substitution OR one insertion OR one deletion typo
 if both words have >= 7 letters, allow for two typos
+
+unless the strict flag is on, in which case only allow exact matches
 '''
 # todo return to other functions exactly how off the guess is
+# return it as the second argument
 # possible ways: -1 is failure, 0 is perf(no typos), >= 1 is number of typos, up to 3
 
-def typo(w1, w2):
+def typo(w1, w2, strict=False):
     w1, w2 = w1.lower(), w2.lower()
     if w1 == w2: return True
+
+    if strict: return False
 
     # can't reliably check short words
     if min(len(w1),len(w2)) <= 2: return False
@@ -227,10 +232,12 @@ def recurse(title, tokens):
 helper function for tag_tokens_movies()
 tokens is String[] of tokenised input
 title is a String[] title to search for in the tokens
+optional Boolean arg strict signals to typo whether or not to allow typos, otherwise it just checks
+lowercase strings
 
 return Boolean if all consecutive words in title are found in the tokens
 '''
-def look(title, tokens):
+def look(title, tokens, strict=False):
     # helper function
     # ignore title tokens like '3d' or '2'
     def z(t):
@@ -239,13 +246,13 @@ def look(title, tokens):
     title = [t for t in title if z(t)]
 
     if len(title)==0: return False
-    if len(title) == 1: return sum([typo(title[0],t) for t in tokens])>0
+    if len(title) == 1: return sum([typo(title[0],t, strict) for t in tokens])>0
     # note that sometimes with long-titled movies, people
     # will shorten it to one or two words, should check for that todo
     if len(tokens) < len(title): return False
 
     for i, tok in enumerate(tokens[:len(tokens)-len(title)+1]):
-        if typo(tok, title[0]):
+        if typo(tok, title[0], strict):
             if recurse(title, tokens[i:i+len(title)]):
                 return True
             # else, continue checking
@@ -262,7 +269,7 @@ def look(title, tokens):
  ["koramangala", "forum mall"] turns into ["koramanagala", "forum", mall"]
  keeps order of theaters, same length as theatres
 '''
-def secondary_addrs(theatre_addrs):
+def secondary_keywords(theatre_addrs):
     t_addrs1 = [] #cut up list so that all words are split up
     for t in theatre_addrs:
         t_i = []
@@ -282,25 +289,41 @@ def secondary_addrs(theatre_addrs):
 def primary(tokens, tc, theatre_addrs):
     ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens)]
     tb = set(tc) & (set(ta))
+    if len(tb) > 0:
+        tfinal = tb
+    if ta == 1:
+        tfinal = ta
+    if tc == 1:
+        tfinal = tc
+    ''' not sure which one is better
     if len(tc) == 1 or len(ta) == 0:
         tfinal = tc
     elif len(tc) == 0 or len(tb) == 0:  # no companies mentioned, so return addresses mentioned
         tfinal = ta
     else:
         tfinal = tb  # items in both sets, either 0 or something
+    '''
     return tfinal
 '''
  helper function
  alternative to primary, searches for theatre addresses in the tokens
  more lenient, searches for titles for number of occurences
+
+ first checks with the Strict flag on, looking for perfect matches, if those don't exist it
+ looks for typo-matches
  returns titles with addresses whose keywords have appeared in the input
- the maxiumum number of times. returns INDICES OF all such titles (max > 0)
+ the maximum number of times. returns INDICES OF all such titles (max > 0)
 '''
 def secondary(tokens, titleset):
-    s = [sum([look([word], tokens) for word in title]) for title in titleset if len(title)>0]
-    m = max(s)
-    if m == 0: return []
-    sec = [i for i,s1 in enumerate(s) if s1 == m]
+    s0 = [sum([look([word], tokens, True) for word in title]) for title in titleset if len(title)>0]
+    m0 = max(s0)
+    if m0==0:
+        s = [sum([look([word], tokens) for word in title]) for title in titleset if len(title)>0]
+        m = max(s)
+        if m == 0: return []
+        sec = [i for i,s1 in enumerate(s) if s1 == m]
+    else:
+        sec = [i for i,s1 in enumerate(s0) if s1 == m0]
     return sec
 '''
 tag_tokens_movies()
@@ -330,8 +353,8 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
     ts = clean([t.company for t in theatres]) #String[]
 
     theatre_comps = [c.split() for c in ts]# String[] []
-    theatre_addrs = [t.address for t in theatres] #String []
-    t_addrs1 = secondary_addrs(theatre_addrs) # String [] []
+    theatre_keywords = [[t.company] + t.address for t in theatres] #String [] []
+    t_addrs1 = secondary_keywords(theatre_keywords) # String [] []
 
     # check if any movies are mentioned
     mov_pri = [' '.join(title) for title in movies if look(title, tokens)]
@@ -342,11 +365,10 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
 
     # first, check if theatre companies are mentioned. then check
     # if their addresses are mentioned.
-    tc = [i for i, title in enumerate(theatre_comps) if look(title, tokens)]
-    pri = primary(tokens, tc, theatre_addrs)
+    tc = [i for i, title in enumerate(theatre_comps) if look(title, tokens, True)]
+    pri = primary(tokens, tc, theatre_keywords)
     sec = secondary(tokens, t_addrs1)
-
-    fin = []
+    #important decision here: maybe give it another argument? maybe also include the cinema name
     if question == 2 and len(pri) == 0: fin = sec
     else: fin = pri
 
@@ -361,7 +383,7 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
 from knowledge import get_theatres
 ntm, ntt, tl = get_theatres()
 
-t = tokeniser("something something put in a movie name max here ok")[1]
+t = tokeniser("something something cinemax bellandur put in a movie name max here ok")[1]
 q=-1
 fm, ft = tag_tokens_movies(t, ntm, ntt, q)
 

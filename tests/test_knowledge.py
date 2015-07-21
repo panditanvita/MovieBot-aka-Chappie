@@ -51,6 +51,7 @@ class Test2(unittest.TestCase):
         self.assertTrue(len(self.ntt.keys()) > 3)
         self.assertTrue(len(self.ntt.keys()) < 70)
 
+
     # very important
     # make sure the google theatre names mapped to the known static BMS names
     # checks that our bms_names in finished namesToTheatres dictionary
@@ -69,6 +70,17 @@ class Test2(unittest.TestCase):
                     print ('error', returned.bms_name)
                     self.assertTrue(False)
                 enforce_one2one[returned.bms_name] = title
+
+    '''
+    can slightly alter the get_theatres() function to take in an alternate html file to parse
+    can then save one theatre listing page as html file, as a larger test case
+
+
+    def test_parsing_html(self):
+        with open('one_day', mode='r') as f:
+            text = f.readall()
+
+    '''
 
 '''
 todo:

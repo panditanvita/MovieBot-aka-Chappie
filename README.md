@@ -4,6 +4,7 @@ natural language requests for Magic Tiger
 <<in progress>>
 
 idea of an 'expert system' with a knowledge base and logical rule-set.
+keeps track of state and can respond to certain movie-related inputs
 
 knowledge takes care of scraping and parsing information from the internet/stored files
 

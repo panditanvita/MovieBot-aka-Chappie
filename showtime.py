@@ -11,13 +11,10 @@ all user-parsed times should be able to be turned into instances of Time
 import re
 
 class Time:
-    # somewhere need to substitute words nine-thirty for 9:30 todo
-    # test suite todo
     def __init__(self, time):
         self.hours, self.minutes = self.parse_time(time)
 
     def parse_time(self,time):
-        # todo assert time is in the right format
         assert(len(time) <= 8) #biggest possible "11 30 pm"
 
         #insert space after numbers, before am/pm todo watch out for cases
@@ -91,7 +88,7 @@ class Time:
         return hours, minutes
 
     # get_frame()
-    # returns if time is within the frame specified
+    # returns Boolean if time is within the frame specified
     # frames: morning, afternoon or evening or night [0, 1, 2, 3]
     # note that the frames overlap
     # set up so that 6 to 12 is morning
@@ -104,9 +101,23 @@ class Time:
         frames = [r(6,12),r(12,16),r(15,22),r(18,24)]
         return frames[frame]
 
+
     def printout(self):
         m = self.minutes
         if m < 10: sm = str(0) + str(m)
         else: sm = str(m)
         out = "{}:{}".format(self.hours,sm)
         return out
+
+'''
+time-related functions
+'''
+
+'''
+input: number in 0,1,2,3
+frames: morning, afternoon or evening or night [0, 1, 2, 3]
+return string name of frame
+'''
+def frame_to_string(frame):
+    frame_strings = ['morning','afternoon','evening','night']
+    return frame_strings[frame]

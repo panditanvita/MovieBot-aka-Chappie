@@ -49,7 +49,7 @@ def narrow_theatres(req,tag_theats,ntt):
             if len(d.get(mk, [])) == 0:
                 r2 = 0, "Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
             else:
-                r2 = 1, "Possible showings today: "+ ' '.join(d.get(mk))
+                r2 = 1, "Possible showings today: "+ ' '.join([t.printout() for t in d.get(mk)])
                 req.add_theatre(t_nice)
         else:
             req.add_theatre(t_nice)
@@ -139,7 +139,7 @@ def evaluate(req, r1, r2, r3, r4):
         return 4, r4[1]
     else:
         # we are done!
-        return -1, "ok"
+        return -1, req.readout()
 
 
 print("Logic module loaded")
