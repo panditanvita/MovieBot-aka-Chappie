@@ -1,17 +1,17 @@
 __author__ = 'V'
 
 '''
-classes for knowledge - google showtimes scraping
+classes for knowledge - used when google showtimes scraping + book my show theatre listing
 
 '''
 from showtime import Time
 
 '''
 Movie
-Each instance of Movie keeps track of a set of theatres in which it is played
+Each instance of Movie keeps track of its title(Cased) and
+a set of theatres in which it is played
+(no support for description yet, but could easily add it to the scraper)
 '''
-
-
 class Movie:
     # theatres is a set() String theatre_names where the movie is playing currently
     # String title
@@ -36,10 +36,10 @@ When a theatre instance is initialised, it adds itself to the list of
 total theatres
 
 Each instance of Theatre keeps track of:
-String bms_name: exact title name as downloaded from book my show
+String bms_name: exact Cased title name as downloaded from book my show
 String[] address: list of address keywords. example: ["Jayanagar", "Garuda Swagath Mall"]
 String company_name: the company/name as a string examples: "PVR", "Inox LIDO", "Innovative Multiplex"
-and a dictionary of String movieName:timings for that day
+and a dictionary of String movieName:timings for that day. movieName is lowercase, timings is []Time
 '''
 
 class Theatre:
@@ -71,14 +71,9 @@ class Theatre:
 
 
 """
-classes for parser
-
-never directly change the conversation and chatline objects.
-
-todo: fix parser to reflect change of direction of Conversation arguments
+classes for storing conversation information
+instantiated by the bot
 """
-
-
 class ChatLine:
     # Boolean who, String timestamp, String content
     def __init__(self, who_said=0, timestamp="00:00:00", content="test"):
@@ -118,9 +113,8 @@ Theatre is String Theatre.bms_name, cased
 date
 time is instance of Time, time of showing
 payment_method is 0 for COD, 1 for online
+(currently nothing to support payment_method or comments)
 '''
-
-
 class MovieRequest:
     # takes in customer id
     def __init__(self, customer):
@@ -128,7 +122,7 @@ class MovieRequest:
         self.num_tickets = 0  # integer
         self.theatre = "[]"  # bms_name
         self.date = "today"
-        self.time = ""
+        self.time = Time('3 am')
         self.payment_method = 0
 
         self.done = [0, 0, 0, 0, 0, 0]  # check for the six earlier attrs
@@ -149,17 +143,17 @@ class MovieRequest:
     def add_theatre(self, theatre):
         self.theatre = theatre
         self.done[2] = 1
-        return True, ""
+        #return True, ""
 
     def add_date(self, date): # either today, tomorrow, or a day of the week
         self.date = date
         self.done[3] = 1
-        return True, ""
+        #return True, ""
 
     def add_time(self, time):
         self.time = time
         self.done[4] = 1
-        return True, ""
+        #return True, ""
 
     # 0 is COD, 1 is online
     def add_payment(self, payment):
@@ -167,11 +161,9 @@ class MovieRequest:
         self.done[5] = 1
 
     def readout(self):
-        if isinstance(self.time, Time):
-           t = self.time.printout()
-        else: t = ""
-        readout = '{} tickets for {} at {},' \
-                  ' for the {} showtime, ' \
-                  '{}'.format(self.num_tickets, self.title, self.theatre,t, self.date)
+        t = (' for the {} showtime, '.format(self.time.printout()) if self.done[4] else "")
+        readout = '{} ticket{} for {} at {}{}, {}'.format(
+            self.num_tickets, ('' if self.num_tickets==1 else "s"),
+                              self.title, self.theatre,t, self.date)
         return readout
 

@@ -1,12 +1,10 @@
 __author__ = 'V'
 
 '''
-once a day: run classifier (when updating for online, download latest chat info with labels, and retrain on that)
 
-every time the bot runs:
-initialise a bot instance to call run_bot() to hold a conversation
-
-with each customer chat, trigger sub-modules
+The sleekxmpp bot is the interface between the bot and the server. it takes in and sends user messages
+to a bot instance
+Each bot instance is tied to a single conversation with one user.
 
 Model: MovieRequest object: attempt to insert information into req object.
 MovieRequest ensures only valid (according to the two movie and theatre dictionaries it contains) information is saved.

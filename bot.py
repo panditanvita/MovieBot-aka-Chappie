@@ -19,10 +19,10 @@ Two options for running:
 1. with a debug flag (in which case, call bot.run() to play with the features,
 and the bot will interact using System.in and System.out
 2. without the debug flag, in which case the bot will keep track of its state in the MovieRequest and conversation
-objects created at instantiation, and you must call the sleek_get_reponse(message) function to get the bot's
+objects created at instantiation, and you must call the sleek_get_response(message) function to get the bot's
 response to a particular input
 
-bot corresponds to a single conversation, as the final product of a succesful conversatiion should be a single
+bot corresponds to a single conversation, as the final product of a successful conversation should be a single
 completed movie request
 
 '''
@@ -61,7 +61,7 @@ class Bot:
 
         self.question, response = self.get_response(message, self.req, self.conversation, self.question)
 
-        if len(self.conversation.chatLines)==1: return "Hello, this is MovieBot\n"+response
+        if len(self.conversation.chatLines)==1: return "Hello, this is MovieBot!\n"+response
         return response
 
 

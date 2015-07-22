@@ -1,10 +1,33 @@
 __author__ = 'V'
 
+'''
+Tokeniser
+tokenizing, categorizing and tagging words done in here
+
+tokeniser splits up incoming string into valid words, attempts to correct for slang,
+and tries to keep times and phone numbers as one token
+
+tagging done in tag_tokens_num (which looks for ticket numbers and times)
+and tag_tokens_movies (which looks for movie titles and theatres).
+
+idea is to allow for some typos using the typo() function for all string comparisons
+
+currently theatre name is the hardest to select for, because the full theatre name is
+never used - people will mention several keywords out of order like 'pvr koramangala' or
+'sri srinivasa', and those keywords may even match to multiple theatres. current
+implementation attempts to look for a subset of matching keywords , and narrows
+down the total space as far as possible
+
+'''
+
+
+
 import re
 from knowledge import clean
 from showtime import Time
 '''
-helper function to cut out the slang
+helper function for tokeniser()
+to cut out the text slang
 '''
 def cut_slang(words):
     # go through common chat slang
@@ -22,6 +45,7 @@ def cut_slang(words):
 
 
 '''
+called in bot.get_response()
 Tokeniser takes in a line of chat text as a string
 It attempts to spell-check the string
 
@@ -29,6 +53,7 @@ Returns a cleaned-up string for the chat line content
 Returns list of tokens of the cleaned-up string IN ORDER
 
 '''
+# possible time regexes, finicky
 #time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
 #time = r"(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d)(?:\s?[a|p]m)?" #possible better alternative
 time = r'(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d{1,2})(?:\s?[a|p]m)?'
@@ -57,8 +82,16 @@ def tokeniser(inp):
     return ' '.join(tokens), tokens
 
 '''
+helper function for tags_tokens_number()
 tags word-number tokens, like 'one', 'ten',
 all the way up to 'twenty', and then 'thirty','forty','fifty'
+turns all word-number tokens in numbers
+returns full list of tokens in same order, except with word-numbers changed to numbers
+
+note: only done here, and not in general tokeniser, because sometimes the word-number is
+used as a movie title or address
+possible more robust alternative, is to adjust the string equality typo() function to
+accept that 'one'=='1'
 '''
 def clean_nums(tokens):
     words = ['one', 'two', 'three', 'four', 'five', 'six', 'seven',
@@ -73,6 +106,7 @@ def clean_nums(tokens):
     return tws
 '''
 checks for numbers
+called in bot.get_response()
 
 tags all tokens with numbers in it.
 
@@ -117,7 +151,7 @@ def tag_tokens_number(tokens, question):
 
     # looking specifically for a time
     timeList = []
-    #if question == 4:
+    #if question == 4: todo create a more/less picky option
     def f(tok): #what if you want 2 tickets for 2 pm dummy todo
         return re.match(time,tok) is not None and tok != (str(ticket_num))
 
@@ -125,11 +159,14 @@ def tag_tokens_number(tokens, question):
     for t in times:
         try: timeList.append(Time(t))
         except AssertionError:
+            # this means it matched the time regex but refuses to be parsed by the Time class
             print("your time is wierd")
 
     return all_nums, times_of_day, ticket_num, timeList
 
 '''
+helper function for tags_tokens_number()
+
 checks for times
 days of the week, times of the day
 '''
@@ -141,6 +178,7 @@ def tag_tokens_time(tokens):
     pattern = r"morning|afternoon|evening|night|tonight|today|" \
               r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds|wednesday|" \
               r"thurs(day)?|sat(urday)?"
+    #return [token for token in tokens if typo(time_tag, token) is not None] todo allow for typos here
     return [token for token in tokens if re.match(r'^{}$'.format(pattern), token) is not None]
 
 '''
@@ -168,7 +206,8 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 '''
-helper function for tag_tokens_movies()
+helper function for tag_tokens_movies(), look(), recurse()
+
 ALL STRING COMPARISONS should be done here to make sure the lower()
 is applied evenly
 input, two String words
@@ -247,8 +286,6 @@ def look(title, tokens, strict=False):
 
     if len(title)==0: return False
     if len(title) == 1: return sum([typo(title[0],t, strict) for t in tokens])>0
-    # note that sometimes with long-titled movies, people
-    # will shorten it to one or two words, should check for that todo
     if len(tokens) < len(title): return False
 
     for i, tok in enumerate(tokens[:len(tokens)-len(title)+1]):
@@ -262,7 +299,7 @@ def look(title, tokens, strict=False):
     return False
 
 '''
- helper function
+ helper function for tags_tokens_movies()
  need a lot more logic, because often the full address isn't
  mentioned or req'd - change it so that the most common addresses are more likely
  takes list of theatre addresses and breaks it down so that an address in the format
@@ -282,30 +319,25 @@ def secondary_keywords(theatre_addrs):
     return t_addrs1
 
 '''
- helper function
+ helper function for tags_tokens_movies()
  primary selects for the most information possible, and in order
  returns set of INDICES!
 '''
 def primary(tokens, tc, theatre_addrs):
-    ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens)]
+    ta = [i for i, title in enumerate(theatre_addrs) if look(title, tokens, True)]
     tb = set(tc) & (set(ta))
     if len(tb) > 0:
         tfinal = tb
-    if ta == 1:
+    elif ta == 1:
         tfinal = ta
-    if tc == 1:
+    elif tc == 1:
         tfinal = tc
-    ''' not sure which one is better
-    if len(tc) == 1 or len(ta) == 0:
-        tfinal = tc
-    elif len(tc) == 0 or len(tb) == 0:  # no companies mentioned, so return addresses mentioned
-        tfinal = ta
     else:
         tfinal = tb  # items in both sets, either 0 or something
-    '''
     return tfinal
+
 '''
- helper function
+ helper function for tags_tokens_movies()
  alternative to primary, searches for theatre addresses in the tokens
  more lenient, searches for titles for number of occurences
 
@@ -325,9 +357,11 @@ def secondary(tokens, titleset):
     else:
         sec = [i for i,s1 in enumerate(s0) if s1 == m0]
     return sec
+
 '''
 tag_tokens_movies()
 looking for movie titles, theatre names, addresses
+called in bot.get_response()
 
 these might be present in full, in part, or with typos
 must be lenient
@@ -343,6 +377,8 @@ secondary:
 if the question flag has marked it so that we are specifically looking for a movie
 or theatre, it becomes more lenient, using the secondary function instead
 secondary function looks for most common occurences/ most overlapping keywords
+note that sometimes with long-titled movies and theatres, people
+will shorten it to one or two words, so secondary helps with that
 
 as String[] movietitles, String[] theatre names
 '''
@@ -369,6 +405,7 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
     pri = primary(tokens, tc, theatre_keywords)
     sec = secondary(tokens, t_addrs1)
     #important decision here: maybe give it another argument? maybe also include the cinema name
+    # todo
     if question == 2 and len(pri) == 0: fin = sec
     else: fin = pri
 
