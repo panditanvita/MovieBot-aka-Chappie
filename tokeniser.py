@@ -1,27 +1,5 @@
 __author__ = 'V'
 
-'''
-Tokeniser
-tokenizing, categorizing and tagging words done in here
-
-tokeniser splits up incoming string into valid words, attempts to correct for slang,
-and tries to keep times and phone numbers as one token
-
-tagging done in tag_tokens_num (which looks for ticket numbers and times)
-and tag_tokens_movies (which looks for movie titles and theatres).
-
-idea is to allow for some typos using the typo() function for all string comparisons
-
-currently theatre name is the hardest to select for, because the full theatre name is
-never used - people will mention several keywords out of order like 'pvr koramangala' or
-'sri srinivasa', and those keywords may even match to multiple theatres. current
-implementation attempts to look for a subset of matching keywords , and narrows
-down the total space as far as possible
-
-'''
-
-
-
 import re
 from knowledge import clean
 from showtime import Time

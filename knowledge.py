@@ -1,17 +1,4 @@
-"""
-Knowledge base for movie bot
 
-Created by web scraping google movie results.
-Only *need* to run it once a day, to update. This file doesn't call anything, all methods are called in other
-places
-
-WATCH OUT:American spelling is 'theater', so google html code uses that.
-Indian/British spelling is 'theatre' and my code uses this!
-
-Speed: takes about five seconds to finish
-
-Testing: Looks right. todo...
-"""
 
 from bs4 import BeautifulSoup
 import requests

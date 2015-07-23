@@ -13,7 +13,7 @@ Bot class:
 Bot has access to unchangeable dictionaries of movie names and theatres, which come from the knowledge base
 each bot instance keeps track of all its conversations, #todo error logs and movie requests made.
 
-specs: MovieBot gives a valid response to every line of movie-related input
+MovieBot gives a valid response to every line of movie-related input
 
 Two options for running:
 1. with a debug flag (in which case, call bot.run() to play with the features,
