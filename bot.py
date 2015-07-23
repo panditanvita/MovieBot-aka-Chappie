@@ -29,6 +29,8 @@ completed movie request
 class Bot:
     # classifier = run_classifier()   maybe
     requests = []
+    ntm, ntt, trash = get_theatres() # should not be changed after instantiation
+
     '''
     Keeping track of all conversations in the record
     Keeping track of all requests in requests
@@ -36,7 +38,7 @@ class Bot:
     '''
 
     def __init__(self, debug=True, resource='test'):
-        self.ntm, self.ntt, trash = get_theatres() # should not be changed after instantiation
+
         self.debug = debug
 
         if not self.debug:
@@ -105,7 +107,7 @@ class Bot:
         # return the movies and theatres mentioned in the input
         # can only return known movies and theatres
         # use question to tell which question we are on, for more useful tagging
-        tag_movs, tag_theats = tag_tokens_movies(tokens, self.ntm, self.ntt, question)
+        tag_movs, tag_theats = tag_tokens_movies(tokens, Bot.ntm, Bot.ntt, question)
 
         #print([t.printout() for t in times]) check times are alright
 
@@ -115,7 +117,7 @@ class Bot:
         # state of the tags
         # returns the new question that it needs to know to finish the request
         # returns statement, the question itself
-        question, statement = narrow(req, tag_movs, tag_theats, tday, t_num, times, self.ntm, self.ntt)
+        question, statement = narrow(req, tag_movs, tag_theats, tday, t_num, times, Bot.ntm, Bot.ntt)
 
         return question, statement
 
@@ -149,6 +151,7 @@ class Bot:
         # accept input at all times
         # open separate thread which writes it to a buffer
         new_text = threading.Event()
+        end_buffer = threading.Event()
 
         def add_to_buffer():
             while True:
@@ -156,15 +159,17 @@ class Bot:
                 chat_buffer.appendleft(inp)
                 new_text.set()
                 if inp.__eq__('bye'):
-                    break
+                    return
+                if end_buffer.is_set():
+                    return
 
         buffer_thread = threading.Thread(name='buffer_thread', target=add_to_buffer)
-        buffer_thread.daemon = True
         buffer_thread.start()
 
         def close():
             print(req.readout())
             Bot.requests.append(req)
+            end_buffer.set()
             return
 
         print("Hi")

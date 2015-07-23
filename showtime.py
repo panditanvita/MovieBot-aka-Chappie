@@ -146,6 +146,22 @@ return number of frame
 def string_to_frame(frame_string):
     return frame_strings.index(frame_string)
 
+'''
+input Int frame
+returns a time in the frame specified
+'''
 def frame_to_time(frame):
     times = [Time('11 am'),Time('2 pm'), Time('5 pm'), Time('9 pm')]
     return times[frame]
+
+# returns Integer time diff in minutes
+def time_diff(t1, t2):
+    h1,m1  = t1.hours, t1.minutes
+    h2,m2 = t2.hours, t2.minutes
+
+    t1_, t2_ = h1*60 + m1, h2*60 + m2
+    return abs(t1_ - t2_)
+
+
+
+

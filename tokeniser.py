@@ -406,7 +406,7 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
     sec = secondary(tokens, t_addrs1)
     #important decision here: maybe give it another argument? maybe also include the cinema name
     # todo
-    if question == 2 and len(pri) == 0: fin = sec
+    if question == 2 or len(pri) == 0: fin = sec
     else: fin = pri
 
     # need to index into a separate list that contains the theatre name

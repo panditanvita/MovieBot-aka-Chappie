@@ -13,11 +13,11 @@ takes care of scraping and parsing information from the internet/stored files
 parses information from the customer, looking for cues like numbers, names of movies
 and theaters, and times
 
-#logic
+##logic
 takes tokenised information and attempts to fill in the request object, making
 sure that the information is mutually compatible
 
-#to play with:
+##to play with:
 run Bot file with interpreter
 
 '''
