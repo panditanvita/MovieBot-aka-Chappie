@@ -2,7 +2,7 @@ __author__ = 'V'
 
 '''
 now that the bot can ask questions and fill in a movie request, we want to move on the
-next step: answering general questions
+next step: examining the information and offering alternative options
 
 given a theatre, return a data structure and formatted string statement explaining all the movies, showtimes
 for that theatre today. optional argument of a specific movie name and time of day to narrow it down

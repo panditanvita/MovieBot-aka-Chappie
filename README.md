@@ -1,10 +1,12 @@
 # MovieBot
 natural language requests for Magic Tiger
 
-<<in progress>>
+<in progress>
+MovieBot helps you look for movie tickets
 
+***
 ###to play with:
-run Bot file with interpreter
+run Bot file on python interpreter
 
 '''
 bot = Bot()
@@ -12,12 +14,15 @@ bot.run()
 '''
 
 interact with bot on the console
-will finish by either fulfilling a request, or if you input "bye"
+ask for a movie that's in theatres. ask for 4 tickets. suggest a time of day.
+or suggest an exact time. or ask for a theatre and suggest a time of day.
 
+will finish by either fulfilling a request, or if you input "bye"
 ***
 
-idea of an 'expert system' with a knowledge base and logical rule-set.
-keeps track of state and can respond to certain movie-related inputs
+***
+####design: idea of an 'expert system' with a knowledge base and logical rule-set. keeps track of state and can respond to certain movie-related inputs
+***
 
 ***
 
@@ -30,12 +35,13 @@ Created by web scraping google movie results.
 Only *need* to run it once a day, to update. This file doesn't call anything, all methods are called in other
 places
 
-WATCH OUT:American spelling is 'theater', so google html code uses that.
+Note: American spelling is 'theater', so google html code uses that.
 Indian/British spelling is 'theatre' and my code uses this!
 
 Speed: takes about five seconds to finish
+***
 
-
+***
 ###tokeniser: tokenises and tags information from the customer
 
 ####tokeniser.py
@@ -54,8 +60,9 @@ never used - people will mention several keywords out of order like 'pvr koraman
 'sri srinivasa', and those keywords may even match to multiple theatres. current
 implementation attempts to look for a subset of matching keywords , and narrows
 down the total space as far as possible
+***
 
-
+***
 ###logic: takes tokenised information and attempts to fill in the request object
 
 ####logic.py
@@ -86,7 +93,7 @@ saved to the request object is lost.
 
 potential improvement - save all past information returned by the narrow() sub-functions
 -long if/else cases are awkward but it seems to work
-
+***
 
 
 

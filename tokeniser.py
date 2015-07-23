@@ -32,7 +32,8 @@ Returns list of tokens of the cleaned-up string IN ORDER
 
 '''
 # possible time regexes, finicky
-#time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
+# do not touch!!
+#time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?"
 #time = r"(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d)(?:\s?[a|p]m)?" #possible better alternative
 time = r'(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d{1,2})(?:\s?[a|p]m)?'
 
@@ -93,7 +94,7 @@ if question is 1, it is looking specifically for the number of tickets
 if question is 4, it is looking for time of day
 returns all_nums, times_of_day, ticket_nums, times
 
-Stringp[] all_nums: anything that matches as a number
+String[] all_nums: anything that matches as a number
 
 String[] times_of_day: returned from helper function to find times of day
 
