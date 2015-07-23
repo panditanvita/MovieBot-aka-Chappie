@@ -1,27 +1,5 @@
 __author__ = 'V'
 
-'''
-Tokeniser
-tokenizing, categorizing and tagging words done in here
-
-tokeniser splits up incoming string into valid words, attempts to correct for slang,
-and tries to keep times and phone numbers as one token
-
-tagging done in tag_tokens_num (which looks for ticket numbers and times)
-and tag_tokens_movies (which looks for movie titles and theatres).
-
-idea is to allow for some typos using the typo() function for all string comparisons
-
-currently theatre name is the hardest to select for, because the full theatre name is
-never used - people will mention several keywords out of order like 'pvr koramangala' or
-'sri srinivasa', and those keywords may even match to multiple theatres. current
-implementation attempts to look for a subset of matching keywords , and narrows
-down the total space as far as possible
-
-'''
-
-
-
 import re
 from knowledge import clean
 from showtime import Time
@@ -54,7 +32,8 @@ Returns list of tokens of the cleaned-up string IN ORDER
 
 '''
 # possible time regexes, finicky
-#time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?" #do not touch!!
+# do not touch!!
+#time = r"\d\d?(?:[\.:\s]?\d{2})?(?:\s?[ap]m)?"
 #time = r"(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d)(?:\s?[a|p]m)?" #possible better alternative
 time = r'(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d{1,2})(?:\s?[a|p]m)?'
 
@@ -115,7 +94,7 @@ if question is 1, it is looking specifically for the number of tickets
 if question is 4, it is looking for time of day
 returns all_nums, times_of_day, ticket_nums, times
 
-Stringp[] all_nums: anything that matches as a number
+String[] all_nums: anything that matches as a number
 
 String[] times_of_day: returned from helper function to find times of day
 
@@ -160,7 +139,7 @@ def tag_tokens_number(tokens, question):
         try: timeList.append(Time(t))
         except AssertionError:
             # this means it matched the time regex but refuses to be parsed by the Time class
-            print("your time is wierd")
+            print("your time is weird")
 
     return all_nums, times_of_day, ticket_num, timeList
 

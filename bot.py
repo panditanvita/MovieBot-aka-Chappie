@@ -7,27 +7,8 @@ from classes import Conversation, ChatLine, MovieRequest
 from tokeniser import tokeniser, tag_tokens_number, tag_tokens_movies
 from collections import deque
 from logic import narrow
-'''
-Bot class:
 
-Bot has access to unchangeable dictionaries of movie names and theatres, which come from the knowledge base
-each bot instance keeps track of all its conversations, #todo error logs and movie requests made.
-
-specs: MovieBot gives a valid response to every line of movie-related input
-
-Two options for running:
-1. with a debug flag (in which case, call bot.run() to play with the features,
-and the bot will interact using System.in and System.out
-2. without the debug flag, in which case the bot will keep track of its state in the MovieRequest and conversation
-objects created at instantiation, and you must call the sleek_get_response(message) function to get the bot's
-response to a particular input
-
-bot corresponds to a single conversation, as the final product of a successful conversation should be a single
-completed movie request
-
-'''
 class Bot:
-    # classifier = run_classifier()   maybe
     requests = []
     ntm, ntt, trash = get_theatres() # should not be changed after instantiation
 
@@ -191,9 +172,6 @@ class Bot:
             question, e2 = self.get_response(inp, req, conversation, question)
 
             # ask a question to find out later information
-            # todo: make it so that the bot doesn't have to say something after every single text,
-            # todo let it combine texts which come in within a few seconds of each other into one input set
-            # todo to support checking multiple lines at once - check past conversation lines
             if question != -1:
                 print(e2)
             else:
