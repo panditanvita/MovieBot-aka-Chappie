@@ -162,7 +162,7 @@ class MovieRequest:
 
     def readout(self):
         t = (' for the {} showtime, '.format(self.time.printout()) if self.done[4] else "")
-        readout = '{} ticket{} for {} at {}{}, {}'.format(
+        readout = '{} ticket{} for {} at {}{}{}'.format(
             self.num_tickets, ('' if self.num_tickets==1 else "s"),
                               self.title, self.theatre,t, self.date)
         return readout

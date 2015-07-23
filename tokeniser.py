@@ -139,7 +139,7 @@ def tag_tokens_number(tokens, question):
         try: timeList.append(Time(t))
         except AssertionError:
             # this means it matched the time regex but refuses to be parsed by the Time class
-            print("your time is wierd")
+            print("your time is weird")
 
     return all_nums, times_of_day, ticket_num, timeList
 

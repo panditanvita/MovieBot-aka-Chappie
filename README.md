@@ -1,11 +1,10 @@
 # MovieBot
-natural language requests for Magic Tiger
+natural language movie requests for Magic Tiger
 
-<in progress>
-MovieBot helps you look for movie tickets
+<</in progress/>>
 
 ***
-###to play with:
+###to play:
 run Bot file on python interpreter
 
 '''
@@ -17,23 +16,40 @@ interact with bot on the console
 ask for a movie that's in theatres. ask for 4 tickets. suggest a time of day.
 or suggest an exact time. or ask for a theatre and suggest a time of day.
 
-will finish by either fulfilling a request, or if you input "bye"
+Finish by either fulfilling a request, or if you input "bye"
 ***
 
 ***
-####design: idea of an 'expert system' with a knowledge base and logical rule-set. keeps track of state and can respond to certain movie-related inputs
-***
+###Purpose:
+MovieBot gives a valid response to every line of movie-related input
+Each bot corresponds to a single conversation, as the final product of a successful conversation should be a single
+completed movie request
+Bot has access to unchangeable dictionaries of movie names and theatres, which come from the knowledge base
+each bot instance keeps track of all its conversations.
+
+Two options for running:
+1. with a debug flag (in which case, call bot.run() to play with the features,
+and the bot will interact using System.in and System.out
+2. without the debug flag, in which case the bot will keep track of its state in the MovieRequest and conversation
+objects created at instantiation, and you must call the sleek_get_response(message) function to get the bot's
+response to a particular input
 
 ***
 
-###knowledge : takes care of scraping and parsing information from the internet/stored files
+***
+###Design:
+
+idea of an 'expert system' with a knowledge base and logical rule-set. keeps track of state and can respond to certain movie-related inputs
+
+###Knowledge : scraping and parsing information from the internet/stored files
 
 ####knowledge.py:
 Knowledge base for movie bot
 
-Created by web scraping google movie results.
-Only *need* to run it once a day, to update. This file doesn't call anything, all methods are called in other
-places
+Created by web scraping google movie results. Correlates with static list of
+theatre information from book my show theatre listings. Ties in google showings
+to known theaters in stored file.
+Only *need* to run it once a day, to update.
 
 Note: American spelling is 'theater', so google html code uses that.
 Indian/British spelling is 'theatre' and my code uses this!
@@ -42,7 +58,7 @@ Speed: takes about five seconds to finish
 ***
 
 ***
-###tokeniser: tokenises and tags information from the customer
+###Tokeniser: tokenises and tags information from the customer
 
 ####tokeniser.py
 tokenizing, categorizing and tagging words done in here
@@ -63,7 +79,7 @@ down the total space as far as possible
 ***
 
 ***
-###logic: takes tokenised information and attempts to fill in the request object
+###Logic: takes tokenised information and attempts to fill in the request object
 
 ####logic.py
 Logic is thought of in terms of cases: given a limited set of total
@@ -87,12 +103,27 @@ maybe the selected movie is not playing in the selected theatre?
 give alternate showtimes
 eval() chooses which output to return.
 
-IMPORTANT: note that eval() re-evaluates based on every time narrow() is called on a set
+Note that eval() re-evaluates based on every time narrow() is called on a set
 of tags! so information from the past eval() is re-written, and everything which is not
 saved to the request object is lost.
+***
 
-potential improvement - save all past information returned by the narrow() sub-functions
--long if/else cases are awkward but it seems to work
+***
+####Further improvements:
+
+- google scraping doesn't return a lot of valid showtimes - need the book my show api
+
+- save all past information returned by the narrow() sub-functions
+- long if/else cases in logic are awkward (but it seems to work)
+- options for choosing numbered answers still needs to be done
+- timeout for repeating the same question
+- options for choosing a different day (will need to scrape theatres for the
+next day as well, and tie that into our knowledge base)
+- current design is to have a single response to every line of input from the customer
+ other possible options, which might be better
+-- the bot only responds to new information
+-- bot combines texts which come in within a few seconds of each other into one input set
+
 ***
 
 

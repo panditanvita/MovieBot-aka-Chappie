@@ -156,7 +156,7 @@ def narrow_num(req, tday, ticket_num, times, ntm, ntt):
                 #if a specific time has been chosen, then look for similar showtimes
                 if time:
                     for time1 in showtimes:
-                        if time_diff(time1,times[0]) < 30:
+                        if time_diff(time1,times[0]) <= 30:
                             req.add_time(time1)
                             r4 = 1,""
             else:
@@ -200,6 +200,7 @@ def narrow(req, tag_movs, tag_theats, tday, ticket_num, times, ntm, ntt):
     r2 = narrow_theatres(req,tag_theats,ntt)
     r3, r4 = narrow_num(req, tday, ticket_num, times, ntm, ntt)
 
+    print(tag_theats)
    #print('r2',r2)
     #print('r4',r4)
     return evaluate(req, r1, r2, r3, r4)

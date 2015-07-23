@@ -13,11 +13,6 @@ two parts:
 -recognising that there is a question/understanding the question
 -answering the question, which is a lot easier
 
-other features:
--options for choosing numbered answers still needs to be done
--timeout for repeating the same question
-aaannnnd options for choosing a different day (will need to scrape theatres for the
-next day as well, and tie that into our knowledge base)
 '''
 
 from showtime import frame_to_string
