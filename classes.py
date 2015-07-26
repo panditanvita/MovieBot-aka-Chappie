@@ -54,7 +54,7 @@ class Theatre:
         Theatre.theatres.append(self)
 
     # String movie
-    # String[] timings ex: "10:30am"
+    # Time[] timings ex: "[Time('10:30am')]
     def put(self, movie, timings):
         self.check()
         self.movies[movie.lower()] = timings
@@ -106,6 +106,12 @@ class Conversation:
 
 '''
 classes for bot
+'''
+
+'''
+MovieRequest: object keep track of information that we are completely
+sure of, which fits in with all the other information that we have
+stored in the object
 
 Title is String movie title, cased
 num_tickets is Integer number of tickets
@@ -113,6 +119,7 @@ Theatre is String Theatre.bms_name, cased
 date
 time is instance of Time, time of showing
 payment_method is 0 for COD, 1 for online
+
 (currently nothing to support payment_method or comments)
 '''
 class MovieRequest:
@@ -167,3 +174,32 @@ class MovieRequest:
                               self.title, self.theatre,t, self.date)
         return readout
 
+
+'''
+Keeping track of what we are learning.
+
+Int question: corresponds to index of attribute in request.done. Initialised as 0,
+which means the initial question is about the movie.
+
+Options keeps track of a list of options, whether of movies or theatres,
+where the option number is i+1, for index i of the item in the list
+
+list of keys
+
+Option is used in logic.py - if we are given a tagged numbers, and (there are
+multiple items in state.options, indicating that the last thing the bot said
+was a list of options AND the question isn't looking for time or  - there can be
+multiple showtimes that the bot returns as possible examples, but people will
+use the time value itself to refer to them, not the number), then
+we should use that number to correspond to the item numbered in the options,
+pick out that item, treat it like an equivalent to the case if tag_theats or
+tag_movs had a single item, and rewrite the option list, either to [] or to a new
+list
+hence it must be re-created every time logic module runs
+
+'''
+class State:
+    def __init__(self):
+        self.question = 0
+        self.options = []
+        self.option_type = 0 #for theatres, 1 for movies

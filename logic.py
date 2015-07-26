@@ -16,7 +16,7 @@ has_correct_movies code:
 '''
 def narrow_movies(req,tag_movs,ntm):
     r1 = 0, "Which movie?"
-    if req.done[0] != 1:
+    if req.done[0] != 1: # doesn't re-write if a movie is already selected
         if len(tag_movs) == 1:
             m_nice = ntm[tag_movs[0]].title
             req.add_title(m_nice)
@@ -61,13 +61,14 @@ def narrow_theatres(req,tag_theats,ntt):
         if req.done[0]:
             ft = [t for t in tag_theats if len(ntt[t].movies.get(mk, [])) > 0]
             if len(ft) == 0:
-                statement = "{} isn't playing there today".format(req.title)
+                statement = "{} isn't playing at any of those locations today".format(req.title)
             else:
                 ft_nice = [ntt[t].bms_name for t in ft]
-                statement = "{} is playing in: ".format(req.title) + '\n'.join(ft_nice)
-                # ['{}. {}'.format(i, t) for i, t in enumerate(ft)]
-                # not using because cannot support user choosing numbers
-                # but it would be nice
+                statement = "{} is playing in: ".format(req.title) \
+                            + '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft_nice)])
+                            #'\n'.join(ft_nice)
+                #
+                # support user choosing numbers!
 
                 # ['{}. {}'.format(i, t) for i, t in enumerate(tag_theats)]
             r2 = 2, statement
@@ -160,7 +161,7 @@ def narrow_num(req, tday, ticket_num, times, ntm, ntt):
                             req.add_time(time1)
                             r4 = 1,""
             else:
-                #list of movies and theatres
+                #list of movies and theatres, cut off because it can get long
                 r4 = 2, statement[:400] + '...'
         else:
             # no movie, no theatre either
