@@ -106,6 +106,12 @@ class Conversation:
 
 '''
 classes for bot
+'''
+
+'''
+MovieRequest: object keep track of information that we are completely
+sure of, which fits in with all the other information that we have
+stored in the object
 
 Title is String movie title, cased
 num_tickets is Integer number of tickets
@@ -113,6 +119,7 @@ Theatre is String Theatre.bms_name, cased
 date
 time is instance of Time, time of showing
 payment_method is 0 for COD, 1 for online
+
 (currently nothing to support payment_method or comments)
 '''
 class MovieRequest:
@@ -166,4 +173,20 @@ class MovieRequest:
             self.num_tickets, ('' if self.num_tickets==1 else "s"),
                               self.title, self.theatre,t, self.date)
         return readout
+
+
+'''
+Keeping track of what we are learning.
+
+Int question: corresponds to index of attribute in request.done. Initialised as 0,
+which means the initial question is about the movie.
+
+Options keeps track of a list of options, whether of movies, theatres or showtimes,
+where the option number is i+1, for index i of the item in the list
+
+'''
+class State:
+    def __init__(self):
+        self.question = 0
+        self.options = []
 

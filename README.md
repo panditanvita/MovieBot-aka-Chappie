@@ -46,7 +46,18 @@ response to a particular input
 ***
 ###Design:
 
-idea of an 'expert system' with a knowledge base and logical rule-set. keeps track of state and can respond to certain movie-related inputs
+idea of an 'expert system' with a knowledge base and logical rule-set.
+
+keeps track of state in a State object and can respond to certain movie-related inputs
+
+State object has a question and option.
+Question corresponds to the attribute the bot is expecting to here about, and is used in the
+tagging functions, to favor entities which are indicated by the question. For example -
+if question is 1, then the tagging functions try harder to find a valid movie title.
+If the bot response involves multiple options, we want to make it easier for the customer
+to choose a specific one. Option field keeps track of given options, if the bot gave
+a list of valid theatres or movies, for example.
+
 
 ###Knowledge : scraping and parsing information from the internet/stored files
 
