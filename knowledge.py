@@ -312,5 +312,11 @@ def get_theatres():
 
         url = startUrl + "&start=" + str(len(theatreList))
 
+    # add all theatres into dictionary, even if it doesn't have any movies for today
+    # that way, we can always recognise when a theatre is mentioned
+    for t in Theatre.theatres:
+        if t.bms_name.lower() not in namesToTheatres.keys():
+            namesToTheatres[t.bms_name.lower()] = t
+
     print("Knowledge base loaded")
     return namesToMovies, namesToTheatres, theatreList

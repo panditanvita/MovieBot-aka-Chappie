@@ -54,7 +54,7 @@ class Theatre:
         Theatre.theatres.append(self)
 
     # String movie
-    # String[] timings ex: "10:30am"
+    # Time[] timings ex: "[Time('10:30am')]
     def put(self, movie, timings):
         self.check()
         self.movies[movie.lower()] = timings

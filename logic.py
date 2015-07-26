@@ -16,7 +16,7 @@ has_correct_movies code:
 '''
 def narrow_movies(req,tag_movs,ntm):
     r1 = 0, "Which movie?"
-    if req.done[0] != 1:
+    if req.done[0] != 1: # doesn't re-write if a movie is already selected
         if len(tag_movs) == 1:
             m_nice = ntm[tag_movs[0]].title
             req.add_title(m_nice)
@@ -160,7 +160,7 @@ def narrow_num(req, tday, ticket_num, times, ntm, ntt):
                             req.add_time(time1)
                             r4 = 1,""
             else:
-                #list of movies and theatres
+                #list of movies and theatres, cut off because it can get long
                 r4 = 2, statement[:400] + '...'
         else:
             # no movie, no theatre either
