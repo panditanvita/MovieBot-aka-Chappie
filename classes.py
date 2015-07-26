@@ -181,12 +181,25 @@ Keeping track of what we are learning.
 Int question: corresponds to index of attribute in request.done. Initialised as 0,
 which means the initial question is about the movie.
 
-Options keeps track of a list of options, whether of movies, theatres or showtimes,
+Options keeps track of a list of options, whether of movies or theatres,
 where the option number is i+1, for index i of the item in the list
+
+list of keys
+
+Option is used in logic.py - if we are given a tagged numbers, and (there are
+multiple items in state.options, indicating that the last thing the bot said
+was a list of options AND the question isn't looking for time or  - there can be
+multiple showtimes that the bot returns as possible examples, but people will
+use the time value itself to refer to them, not the number), then
+we should use that number to correspond to the item numbered in the options,
+pick out that item, treat it like an equivalent to the case if tag_theats or
+tag_movs had a single item, and rewrite the option list, either to [] or to a new
+list
+hence it must be re-created every time logic module runs
 
 '''
 class State:
     def __init__(self):
         self.question = 0
         self.options = []
-
+        self.option_type = 0 #for theatres, 1 for movies

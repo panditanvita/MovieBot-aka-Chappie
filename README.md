@@ -141,7 +141,7 @@ saved to the request object is lost.
 object, which should keep track of both the question and the narrowed down options
 
 
-- long if/else cases in logic are awkward (but it seems to work)
+- long if/else cases in logic are awkward (but it seems to work). what alternatives?
 - options for choosing numbered answers still needs to be done
 - timeout for repeating the same question
 - options for choosing a different day (will need to scrape theatres for the
