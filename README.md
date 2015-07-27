@@ -6,6 +6,15 @@ natural language movie requests for Magic Tiger
 ***
 ###to play:
 
+dependencies:
+
++BeautifulSoup
+
++requests
+
++sleekxmpp
+
+
 run Bot file on python interpreter
 
 `
@@ -204,7 +213,9 @@ next day as well, and tie that into our knowledge base)
 
 ####Credits
 levenshtein edit distance function from wiki
+
 xmpp_bot mostly from the sleek_xmmp boilerplate
+
 All other code written by me, Anvita Pandit, for commercial application with Magic Tiger.
 
 
