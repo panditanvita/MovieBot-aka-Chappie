@@ -151,14 +151,16 @@ days of the week, times of the day
 '''
 def tag_tokens_time(tokens):
     p1 = "(2|to)(nite|night)"
-    tokens = [re.sub(p1, "night", tok) for tok in tokens]
+    tokens = [re.sub(p1, "tonight", tok) for tok in tokens]
     p2 = "(2|to)(morrow|moro|morro)"
     tokens = [re.sub(p2, "tomorrow", tok) for tok in tokens]
-    pattern = r"morning|afternoon|evening|night|tonight|today|" \
-              r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds|wednesday|" \
-              r"thurs(day)?|sat(urday)?"
-    #return [token for token in tokens if typo(time_tag, token) is not None] todo allow for typos here
-    return [token for token in tokens if re.match(r'^{}$'.format(pattern), token) is not None]
+    #pattern = r"morning|afternoon|evening|night|tonight|today|" \
+    #          r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds|wednesday|" \
+    #          r"thurs(day)?|sat(urday)?"
+
+    time_tags = ['morning','afternoon','evening','night']
+    return [t for token in tokens if sum([typo(t, token) for t in time_tags])>0] #allow for typos here
+    #return [token for token in tokens if re.match(r'^{}$'.format(pattern), token) is not None]
 
 '''
 levenshtein edit distance between two strings a,b,
@@ -207,7 +209,7 @@ def typo(w1, w2, strict=False):
     if strict: return False
 
     # can't reliably check short words
-    if min(len(w1),len(w2)) <= 2: return False
+    if min(len(w1),len(w2)) <= 3: return False
 
     # check for typos. other ideas: tying in the concept of
     # the letters around a letter on the Qwerty keyboard

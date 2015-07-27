@@ -81,7 +81,7 @@ def get_theatres_for_movie(m_nice, ntt, time=[]):
         i = len(answers) +1
         for p in playing:
             answers.append((theatre.bms_name,p[1]))
-            statement += "{}.{}- Showtimes are {}\n".format(i,theatre.bms_name," ".join([t.printout() for t in p[1]]))
+            statement += "{}. {}- Showtimes are {}\n".format(i,theatre.bms_name," ".join([t.printout() for t in p[1]]))
 
     time_statement = get_time_statement(time)
 

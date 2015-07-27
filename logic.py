@@ -43,18 +43,24 @@ def narrow_theatres(req,tag_theats,ntt, options):
     if len(tag_theats) == 1:
         t = tag_theats[0] # use for indexing!
         t_nice = ntt[t].bms_name
+        time = []
+        if req.done[4]: time = req.time.ask_frame()
 
         if req.done[0]:
             # check if movie is in theatre today
+            ans, statement = get_movies_at_theatre(t_nice, ntt, time, req.title)
             d = ntt[t].movies
             if len(d.get(mk, [])) == 0:
-                r2 = 0, "Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
+                r2 = 0, statement #"Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
             else:
-                r2 = 1, "Possible showings today: "+ ' '.join([t.printout() for t in d.get(mk)])
+                r2 = 1, statement #"Possible showings today: "+ ' '.join([t.printout() for t in d.get(mk)])
                 req.add_theatre(t_nice)
         else:
+            # given a movie but don't have a theatre
+            # return list of potential movies
             req.add_theatre(t_nice)
-            r2 = 1, ""
+            ans, statement = get_movies_at_theatre(t_nice,ntt,time)
+            r2 = 1, statement
 
     if len(tag_theats) > 1:
         # check which all are playing if movie is mentioned
@@ -226,11 +232,10 @@ def narrow(req, tags, ntm, ntt, options):
 
     r2 = narrow_theatres(req,tag_theats,ntt, options)
 
-
     #print(tag_theats)
-    #print('r2',r2)
     #print('r4',r4)
     return evaluate(req, r1, r2, r3, r4)
+
 
 
 '''

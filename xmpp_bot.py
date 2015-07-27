@@ -45,7 +45,7 @@ class SleekMovieBot(ClientXMPP):
         #     self.disconnect()
 
     def message(self, msg):
-        key = msg[identifier]
+        key = msg['from']
         if not self.bots.has_key(key):
             self.bots[key] = Bot()
         bot = self.bots[key]

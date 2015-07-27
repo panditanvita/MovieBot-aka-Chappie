@@ -78,7 +78,7 @@ class Bot:
 
         # after a certain number of attempts at the same question, we change to a human
         if self.state.timeout > 3:
-            return self.state, "Can't quite understand you, I'll forward this chat to our chat reps."
+            return "Can't quite understand you, I'll forward this chat to our chat reps."
 
         if len(self.state.conversation.chatLines)==1: statement = "Hello, this is MovieBot!\n"+ statement
 
