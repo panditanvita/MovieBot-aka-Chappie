@@ -115,7 +115,7 @@ def tag_tokens_number(tokens, question):
     # this will not break if the movie title is a number
     # because we are parsing title names somewhere else!
     all_nums = filter(lambda x: re.match(r"\d", x) is not None, tokens)
-    times_of_day = tag_tokens_time(tokens)
+    times_of_day = tag_tokens_time(tokens) #enforce tday is a list of strings..or frames?
 
     # if we are looking specifically for number of tickets, then it just chooses the
     # first number found
@@ -139,7 +139,7 @@ def tag_tokens_number(tokens, question):
         try: timeList.append(Time(t))
         except AssertionError:
             # this means it matched the time regex but refuses to be parsed by the Time class
-            print("your time is weird")
+            print("Your time is weird: {}".format(t))
 
     return all_nums, times_of_day, ticket_num, timeList
 
@@ -151,15 +151,20 @@ days of the week, times of the day
 '''
 def tag_tokens_time(tokens):
     p1 = "(2|to)(nite|night)"
-    tokens = [re.sub(p1, "tonight", tok) for tok in tokens]
+    tokens = [re.sub(p1, "night", tok) for tok in tokens]
     p2 = "(2|to)(morrow|moro|morro)"
     tokens = [re.sub(p2, "tomorrow", tok) for tok in tokens]
     #pattern = r"morning|afternoon|evening|night|tonight|today|" \
     #          r"tomorrow|sun(day)?|mon(day)?|tues(day)?|weds|wednesday|" \
     #          r"thurs(day)?|sat(urday)?"
-
+    # todo switch to above when expanding knowledge database past one day
     time_tags = ['morning','afternoon','evening','night']
-    return [t for token in tokens if sum([typo(t, token) for t in time_tags])>0] #allow for typos here
+    def is_time(token):
+        l = [typo(t, token) for t in time_tags]
+        if sum(l)>0: return time_tags[l.index(True)]
+        return None
+
+    return [is_time(token) for token in tokens if is_time(token) is not None] #allow for typos here
     #return [token for token in tokens if re.match(r'^{}$'.format(pattern), token) is not None]
 
 '''

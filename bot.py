@@ -67,7 +67,7 @@ class Bot:
         # state of the tags
         # returns the new question that it needs to know to finish the request
         # returns statement, the question itself
-        question, statement = narrow(req, tags, Bot.ntm, Bot.ntt, options)
+        question, statement = narrow(self.state, tags, Bot.ntm, Bot.ntt)
 
         # if we are still on the same question, add to the counter
         # works because question is an immutable Int

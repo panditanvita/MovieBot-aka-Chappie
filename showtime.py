@@ -135,16 +135,21 @@ input: number in 0,1,2,3
 frames: morning, afternoon or evening or night [0, 1, 2, 3]
 return string name of frame
 '''
-
 def frame_to_string(frame):
-    return frame_strings[frame]
+    try:
+        return frame_strings[frame]
+    except IndexError:
+        print "Error: {} not a valid frame number".format(frame)
 
 '''
 input: frame_string in frame_strings
 return number of frame
 '''
 def string_to_frame(frame_string):
-    return frame_strings.index(frame_string)
+    try:
+        return frame_strings.index(frame_string)
+    except ValueError:
+        print "Error: {} is not a valid time of day".format(frame_string)
 
 '''
 input Int frame
