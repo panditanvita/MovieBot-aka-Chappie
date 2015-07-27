@@ -24,11 +24,12 @@ class SleekMovieBot(ClientXMPP):
         # Here's how to access plugins once you've registered them:
         # self['xep_0030'].add_feature('echo_demo')
 
-        self.bot = Bot(False)
+        #hash map of unique resource key (customer number) to a selected bot instance
+        self.bots = {}
 
     def session_start(self, event):
         self.send_presence()
-        self.get_roster()
+        #self.get_roster()
 
         # Most get_*/set_* methods from plugins use Iq stanzas, which
         # can generate IqError and IqTimeout exceptions
@@ -44,11 +45,18 @@ class SleekMovieBot(ClientXMPP):
         #     self.disconnect()
 
     def message(self, msg):
+        key = msg[identifier]
+        if not self.bots.has_key(key):
+            self.bots[key] = Bot()
+        bot = self.bots[key]
+
+        body = msg['body']
         if msg['type'] in ('chat', 'normal'):
-            response = self.bot.sleek_get_response(msg)
+            response = bot.get_response(body)
             msg.reply(response).send()
 
-
+            if response == "Goodbye!":
+                self.bots.pop(key)
 
 
 if __name__ == '__main__':

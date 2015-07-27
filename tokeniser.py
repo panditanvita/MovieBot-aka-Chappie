@@ -394,6 +394,23 @@ def tag_tokens_movies(tokens, ntm, ntt, question):
     return found_movies, found_theatres
 
 
+# abstraction
+# return all tags
+def get_tags(tokens, ntm, ntt, question):
+    # return the different numbers found in the input
+    # tries to tell the difference between number of tickets, t_num
+    # times of day, t_day
+    # showtimes []Time times
+    # for example, looks for a number before "tickets"
+    all_nums, tday, t_num, times = tag_tokens_number(tokens, question)
+
+    # return the movies and theatres mentioned in the input
+    # can only return known movies and theatres
+    # use question to tell which question we are on, for more useful tagging
+    tag_movs, tag_theats = tag_tokens_movies(tokens, ntm, ntt, question)
+
+    return tag_movs, tag_theats, all_nums, tday, t_num, times
+
 # for debugging
 '''
 from knowledge import get_theatres

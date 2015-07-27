@@ -3,56 +3,31 @@ __author__ = 'V'
 import threading
 
 from knowledge import get_theatres
-from classes import Conversation, ChatLine, MovieRequest
-from tokeniser import tokeniser, tag_tokens_number, tag_tokens_movies
+from classes import State
+from tokeniser import tokeniser, get_tags
 from collections import deque
 from logic import narrow
 
+
 class Bot:
-    requests = []
+    requests = [] #Keeping track of all requests in requests
     ntm, ntt, trash = get_theatres() # should not be changed after instantiation
+    '''
+    bot is tied to a unique user conversation
+    resource is unique conversation identifier. for a customer, it should be their number
+    we kill the bot when the conversation closes
 
     '''
-    Keeping track of all conversations in the record
-    Keeping track of all requests in requests
-    Keeping track of errors in error_log
-    '''
-
-    def __init__(self, debug=True, resource='test'):
-
-        self.debug = debug
-
-        if not self.debug:
-            self.req = MovieRequest(resource)
-            chatLines = []
-            self.conversation = Conversation(chatLines)
-            self.question = 0
-
-    '''
-    sleek_get_response(String message)
-    for responding to the SleekXMPP bot
-
-    # if debug is false, then bot is called through sleekxmpp
-    # takes in a String message from the customer
-    # returns a String response from the bot, updates stored states of current instance
-    to reflect new information given in the conversation
-    # response should be exactly as per the debug==True response
-
-    '''
-    def sleek_get_response(self, message):
-        assert(self.debug==False)
-
-        self.question, response = self.get_response(message, self.req, self.conversation, self.question)
-
-        if len(self.conversation.chatLines)==1: return "Hello, this is MovieBot!\n"+response
-        return response
-
+    def __init__(self, resource='test'):
+        self.state = State(resource)
 
     '''
     the bot thinks of what to say...
 
-    handles movie-related input from the user
+    handles movie-related String input from the user
     function takes in incoming lines from user then sends it to the relevant submodules.
+    current state of the Bot is kept track of in State object
+    returns new state of bot and the bot response
 
      Submodules:
     - function tokeniser returns spellchecked lists of tokens
@@ -60,37 +35,31 @@ class Bot:
     - tagged tokens are sent to logic, to be checked for mutual compatibility and then inserted
     into the MovieRequest object
     - logic output is given to function narrow, to decide which questions to ask
-    - Int question keeps track of which question we are on. -1 for no question, index of
+
+    Int question keeps track of which question we are on. -1 for no question, index of
     MovieRequest.done for relevant question
     '''
-    def get_response(self, message, req, conversation, question):
+    def get_response(self, message):
+        req, question, options = self.state.req, self.state.question, self.state.options
+
+        #closing
+        if message.lower() == "bye":
+            return "Goodbye!"
+
         # send input to tokenizer
         tokens = tokeniser(message)[1]
 
-        if len(tokens) < 1:
-            return question, "..?"
+        if len(tokens) < 1: return "..?"
 
         #  track of current conversation-create and update
         # Conversation object
-        conversation.chatLines.append(ChatLine(content=tokens[0]))
+        self.state.add_line(tokens[0])
 
         # understand the prepositions to better find where the info is
         # todo submodule, for now check everything, which works pretty well tbh
         # at [theatre], watch|see [movie], at [time]
 
-        # return the different numbers found in the input
-        # tries to tell the difference between number of tickets, t_num
-        # times of day, t_day
-        # showtimes []Time times
-        # for example, looks for a number before "tickets"
-        all_nums, tday, t_num, times = tag_tokens_number(tokens, question)
-
-        # return the movies and theatres mentioned in the input
-        # can only return known movies and theatres
-        # use question to tell which question we are on, for more useful tagging
-        tag_movs, tag_theats = tag_tokens_movies(tokens, Bot.ntm, Bot.ntt, question)
-
-        #print([t.printout() for t in times]) check times are alright
+        tags = get_tags(tokens, Bot.ntm, Bot.ntt, question)
 
         # logic for what to do if there is more than one of the above,
         # must narrow it down
@@ -98,9 +67,22 @@ class Bot:
         # state of the tags
         # returns the new question that it needs to know to finish the request
         # returns statement, the question itself
-        question, statement = narrow(req, tag_movs, tag_theats, tday, t_num, times, Bot.ntm, Bot.ntt)
+        question, statement = narrow(req, tags, Bot.ntm, Bot.ntt, options)
 
-        return question, statement
+        # if we are still on the same question, add to the counter
+        # works because question is an immutable Int
+        if self.state.question == question:
+            self.state.timeout += 1
+        else: self.state.timeout = 0
+        self.state.question = question
+
+        # after a certain number of attempts at the same question, we change to a human
+        if self.state.timeout > 3:
+            return self.state, "Can't quite understand you, I'll forward this chat to our chat reps."
+
+        if len(self.state.conversation.chatLines)==1: statement = "Hello, this is MovieBot!\n"+ statement
+
+        return statement
 
     '''
     run() function
@@ -113,20 +95,10 @@ class Bot:
     2. for popping items from the buffer and processing in order
     thread 1 signals to thread 2 with a new_text Event every time a new text is sent
 
-    keeps track of and constantly updates state within
-    1. Conversation conversation of total input from user,
-    2. Int question of the question we have just asked
-    3. MovieRequest req of all satisfied information
+    keeps track of and constantly updates State.
     '''
 
     def run(self):
-        assert(self.debug==True)
-
-        req = MovieRequest('test')
-        chatLines = []
-        conversation = Conversation(chatLines)
-
-        question = 0  # 0 for movies, 1 for num tickets, 2 for theatre
         chat_buffer = deque()
 
         # accept input at all times
@@ -148,12 +120,11 @@ class Bot:
         buffer_thread.start()
 
         def close():
-            print(req.readout())
-            Bot.requests.append(req)
+            print(self.state.req.readout())
+            Bot.requests.append(self.state.req)
             end_buffer.set()
             return
 
-        print("Hi")
         # main thread
         # while buffer_thread has items in it, pop off items and process
         while True:
@@ -169,16 +140,15 @@ class Bot:
                 close()
                 return
 
-            question, e2 = self.get_response(inp, req, conversation, question)
+            response = self.get_response(inp)
 
-            # ask a question to find out later information
-            if question != -1:
-                print(e2)
-            else:
-                print("Got it, thanks.")
+            if self.state.question == -1:
+                print("Got it, thanks. Bye!")
                 close()
                 return
-
+            else:
+                # ask a question to find out later information
+                print(response)
 '''
 for debugging
 

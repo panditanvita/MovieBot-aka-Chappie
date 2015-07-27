@@ -15,7 +15,7 @@ has_correct_movies code:
 2 for more than one
 '''
 def narrow_movies(req,tag_movs,ntm):
-    r1 = 0, "Which movie?"
+    r1 = 0, "Which movie would you like to see?"
     if req.done[0] != 1: # doesn't re-write if a movie is already selected
         if len(tag_movs) == 1:
             m_nice = ntm[tag_movs[0]].title
@@ -32,9 +32,10 @@ def narrow_movies(req,tag_movs,ntm):
 helper function for narrow()
 
 update the movie theatre in the request object
+update the options in state
 returns tuple r2 of Int has_correct_theatre (0,1, or 2), message
 '''
-def narrow_theatres(req,tag_theats,ntt):
+def narrow_theatres(req,tag_theats,ntt, options):
     mk = req.title.lower()
     r2 = 0, "At which theatre?"
 
@@ -64,6 +65,7 @@ def narrow_theatres(req,tag_theats,ntt):
                 statement = "{} isn't playing at any of those locations today".format(req.title)
             else:
                 ft_nice = [ntt[t].bms_name for t in ft]
+                [options.append(t) for t in ft]
                 statement = "{} is playing in: ".format(req.title) \
                             + '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(ft_nice)])
                             #'\n'.join(ft_nice)
@@ -85,13 +87,31 @@ helper function for narrow()
 Given at least a movie title, and the list of times/numbers mentioned, try to narrow down
 how many tickets and which time to choose
 
+Also checks if the list of options is present, which means that the bot has
+just presented a number of options to the user. if there are any numbers present,
+then this number must be the option
+
 input: r1 and r2 are tuples 0|1|2, Message for movies and theatres
 Integer ticket_num, String[] tday, String[] times
 returns r3, r4, similar tuples with code, message for number of tickets and times
 '''
-def narrow_num(req, tday, ticket_num, times, ntm, ntt):
+def narrow_num(req, all_nums, tday, ticket_num, times, ntm, ntt, b_options):
     r3 = 0, "How many tickets?"
     r4 = 0, "What time?"
+
+    # check if the number given was in response to a list of options
+    if len(b_options)>0:
+        if len(all_nums) == 1:
+            #index into option list
+            chosen_option =ntt[b_options[int(all_nums[0])-1]].bms_name
+            req.add_theatre(chosen_option)
+
+        # remove all options
+        [b_options.pop() for i in range(len(b_options))]
+        # make sure the number chosen here isn't also taken for a time
+        if len(times) ==1:
+            times.pop()
+
     # number of tickets
     if ticket_num != -1:
         assert(isinstance(ticket_num,int))
@@ -159,9 +179,11 @@ def narrow_num(req, tday, ticket_num, times, ntm, ntt):
                     for time1 in showtimes:
                         if time_diff(time1,times[0]) <= 30:
                             req.add_time(time1)
-                            r4 = 1,""
+                            r4 = 1, ""
             else:
                 #list of movies and theatres, cut off because it can get long
+                if not req.done[2]: #todo generalise to movies
+                    [b_options.append(opt[0].lower()) for opt in options]
                 r4 = 2, statement[:400] + '...'
         else:
             # no movie, no theatre either
@@ -194,15 +216,19 @@ assuming time is for today
 returns updated_request, r1, r2, r3, r4
 a tuple of results each for movies, theatres, number of tickets and showtimes
 '''
-def narrow(req, tag_movs, tag_theats, tday, ticket_num, times, ntm, ntt):
+def narrow(req, tags, ntm, ntt, options):
+    tag_movs, tag_theats, all_nums, tday, t_num, times = tags
     # take care of movies, either we find 0, 1 or more than 1
     #print (tag_movs, tag_theats)
     r1 = narrow_movies(req, tag_movs, ntm)
-    r2 = narrow_theatres(req,tag_theats,ntt)
-    r3, r4 = narrow_num(req, tday, ticket_num, times, ntm, ntt)
+    #check old options first before re-writing
+    r3, r4 = narrow_num(req, all_nums, tday, t_num, times, ntm, ntt, options)
 
-    print(tag_theats)
-   #print('r2',r2)
+    r2 = narrow_theatres(req,tag_theats,ntt, options)
+
+
+    #print(tag_theats)
+    #print('r2',r2)
     #print('r4',r4)
     return evaluate(req, r1, r2, r3, r4)
 

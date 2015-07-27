@@ -78,10 +78,10 @@ def get_theatres_for_movie(m_nice, ntt, time=[]):
     for theatre in ntt.values():
         # should return either mktuple of movie_name, Time[] showtimes or an empty list
         playing = get_movies_at_theatre(theatre.bms_name, ntt, time, m_nice)[0]
-        #print(playing)
+        i = len(answers) +1
         for p in playing:
             answers.append((theatre.bms_name,p[1]))
-            statement += "{}- Showtimes are {}\n".format(theatre.bms_name," ".join([t.printout() for t in p[1]]))
+            statement += "{}.{}- Showtimes are {}\n".format(i,theatre.bms_name," ".join([t.printout() for t in p[1]]))
 
     time_statement = get_time_statement(time)
 
