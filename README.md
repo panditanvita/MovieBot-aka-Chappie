@@ -186,8 +186,10 @@ How to generalise to a bot for booking travel tickets, or for buying groceries:
 General principles - creating the knowledge base, tokenising user input, forming logical rules -
 as described in the readme are broadly applicable.  The Knowledge base itself would of course completely change.
 Tokenising would have to be adapted to incorporate new slang and tag different entity groups, like Cities.
+
 Logic currently selects:
-1 or many (available) movies, 1 or many (available) theatres, a given or range of showtimes, all mutually compatible
+
+1 or many (available) movies, 1 or many (available) theatres, a given or range of showtimes, all mutually compatible.
 For bus tickets: To and From are set, a given or range of departure times
 For groceries: 1 or more items, with quantities.
 For logically similar cases like booking bus tickets, one would be able to reuse some of the logic functions.
@@ -197,8 +199,9 @@ For logically similar cases like booking bus tickets, one would be able to reuse
 - (most important) API is biggest bottleneck to a better bot - with it, we can use the request printout generated as a confirmation
 ticket for the customer, and go ahead booking the ticket for them with the bot as well. We would also need further
 questions, such as suggesting seat type (far from the screen, close) based on what's available.
-google scraping doesn't return a lot of the valid showtimes - need
-the book my show api. also important because then we could keep a single static knowledge
+
+Google scraping doesn't return a lot of the valid showtimes - need
+the book my show api. Also important because then we could keep a single static knowledge
 base, which would allow us to keep adding information about each theatre. scraping is like
 hunter-gathering, works on the fly, but farming is better.
 
