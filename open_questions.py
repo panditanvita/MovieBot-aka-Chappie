@@ -33,7 +33,7 @@ input: String theatre_name key, ntt dictionary, list of times of day(ifnot speci
 returns two items: [list of tuples of
 ((String movie_name, Time[] showtimes) for each movie], formatted string output of same
 '''
-def get_movies_at_theatre(t_nice, ntt, time=[], m_nice = ""):
+def get_movies_at_theatre(t_nice, ntm, ntt, time=[], m_nice = ""):
     answers, statement = [], ""
     theatre = t_nice.lower()
     movie_name = m_nice.lower()
@@ -51,7 +51,8 @@ def get_movies_at_theatre(t_nice, ntt, time=[], m_nice = ""):
         else: ans = movies[movie]
         if len(ans)>0:
             answers.append((movie,ans))
-            statement += "{} is playing at {}\n".format(m_nice," ".join([t.printout() for t in ans]))
+            m_title = ntm[movie].title
+            statement += "{} is playing at {}\n".format(m_title," ".join([t.printout() for t in ans]))
 
     time_statement = get_time_statement(time)
 
@@ -77,7 +78,7 @@ def get_theatres_for_movie(m_nice, ntt, time=[]):
     answers, statement = [], ""
     for theatre in ntt.values():
         # should return either mktuple of movie_name, Time[] showtimes or an empty list
-        playing = get_movies_at_theatre(theatre.bms_name, ntt, time, m_nice)[0]
+        playing = get_movies_at_theatre(theatre.bms_name, ntm, ntt, time, m_nice)[0]
         i = len(answers) +1
         for p in playing:
             answers.append((theatre.bms_name,p[1]))

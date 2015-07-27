@@ -35,7 +35,7 @@ update the movie theatre in the request object
 update the options in state
 returns tuple r2 of Int has_correct_theatre (0,1, or 2), message
 '''
-def narrow_theatres(req,tag_theats,ntt, options):
+def narrow_theatres(req,tag_theats,ntm, ntt, options):
     mk = req.title.lower()
     r2 = 0, "At which theatre?"
 
@@ -48,7 +48,7 @@ def narrow_theatres(req,tag_theats,ntt, options):
 
         if req.done[0]:
             # check if movie is in theatre today
-            ans, statement = get_movies_at_theatre(t_nice, ntt, time, req.title)
+            ans, statement = get_movies_at_theatre(t_nice, ntm, ntt, time, req.title)
             d = ntt[t].movies
             if len(d.get(mk, [])) == 0:
                 r2 = 0, statement #"Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
@@ -59,7 +59,7 @@ def narrow_theatres(req,tag_theats,ntt, options):
             # given a movie but don't have a theatre
             # return list of potential movies
             req.add_theatre(t_nice)
-            ans, statement = get_movies_at_theatre(t_nice,ntt,time)
+            ans, statement = get_movies_at_theatre(t_nice, ntm, ntt,time)
             r2 = 1, statement
 
     if len(tag_theats) > 1:
@@ -230,7 +230,7 @@ def narrow(req, tags, ntm, ntt, options):
     #check old options first before re-writing
     r3, r4 = narrow_num(req, all_nums, tday, t_num, times, ntm, ntt, options)
 
-    r2 = narrow_theatres(req,tag_theats,ntt, options)
+    r2 = narrow_theatres(req,tag_theats,ntm, ntt, options)
 
     #print(tag_theats)
     #print('r4',r4)
