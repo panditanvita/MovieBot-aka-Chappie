@@ -26,6 +26,8 @@ def get_time_statement(time):
 get_movies_at_theatre(theatre,ntt,time=-1)
 
 What movies are playing at [String theatre]. optional time of day modifier, else returns all times
+Time of day modifier is a list of frames, which are integers in [0,3]. empty list means all times
+
 optional [String movie_name] modifier to choose a particular movie at [theatre], else returns all movies
 input t_nice and m_nice are Cased
 theatre and movie_name must be a working key!
@@ -33,7 +35,7 @@ input: String theatre_name key, ntt dictionary, list of times of day(ifnot speci
 returns two items: [list of tuples of
 ((String movie_name, Time[] showtimes) for each movie], formatted string output of same
 '''
-def get_movies_at_theatre(t_nice, ntt, time=[], m_nice = ""):
+def get_movies_at_theatre(t_nice, ntm, ntt, time, m_nice = ""):
     answers, statement = [], ""
     theatre = t_nice.lower()
     movie_name = m_nice.lower()
@@ -42,16 +44,21 @@ def get_movies_at_theatre(t_nice, ntt, time=[], m_nice = ""):
         if movies.has_key(movie_name):
             movies = {movie_name: movies[movie_name]}
             mov_statement = m_nice
-        else: return [], "{} is not playing at {}".format(m_nice, theatre)
+        else: return [], "{} is not playing at {}".format(m_nice, t_nice)
     else: mov_statement = "any movies"
 
+    def present(t):
+        l = [t.get_frame(t1) for t1 in time]
+        return sum(l)>0
     # iterate through (subsection of) movies in the theatre
     for movie in movies.keys():
-        if len(time)>0: ans = [t for t in movies[movie] if sum([t.get_frame(t1) for t1 in time])>0]
+        if len(time)>0:
+            ans = [t for t in movies[movie] if present(t)]
         else: ans = movies[movie]
         if len(ans)>0:
             answers.append((movie,ans))
-            statement += "{} is playing at {}\n".format(m_nice," ".join([t.printout() for t in ans]))
+            m_title = ntm[movie].title
+            statement += "{} is playing at {}\n".format(m_title," ".join([t.printout() for t in ans]))
 
     time_statement = get_time_statement(time)
 
@@ -73,15 +80,15 @@ returns two items: data structure, a [list of tuples (String theatre.bms_name, T
 formatted statement for user explaining where the movie is playing
 
 '''
-def get_theatres_for_movie(m_nice, ntt, time=[]):
+def get_theatres_for_movie(m_nice, ntm, ntt, time):
     answers, statement = [], ""
     for theatre in ntt.values():
         # should return either mktuple of movie_name, Time[] showtimes or an empty list
-        playing = get_movies_at_theatre(theatre.bms_name, ntt, time, m_nice)[0]
-        #print(playing)
+        playing = get_movies_at_theatre(theatre.bms_name, ntm, ntt, time, m_nice)[0]
+        i = len(answers) +1
         for p in playing:
             answers.append((theatre.bms_name,p[1]))
-            statement += "{}- Showtimes are {}\n".format(theatre.bms_name," ".join([t.printout() for t in p[1]]))
+            statement += "{}. {}- Showtimes are {}\n".format(i,theatre.bms_name," ".join([t.printout() for t in p[1]]))
 
     time_statement = get_time_statement(time)
 

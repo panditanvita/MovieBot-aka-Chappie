@@ -178,10 +178,15 @@ class MovieRequest:
 '''
 Keeping track of what we are learning.
 
-Int question: corresponds to index of attribute in request.done. Initialised as 0,
-which means the initial question is about the movie.
+state object keeps track of
+1. Conversation conversation of total input from user,
 
-Options keeps track of a list of options, whether of movies or theatres,
+2. Int question of the question we have just asked. corresponds to index of attribute in request.done.
+    Initialised as 0, which means the initial question is about the movie.
+
+3. MovieRequest req of all satisfied information
+
+4. Options keeps track of a list of options, whether of movies or theatres,
 where the option number is i+1, for index i of the item in the list
 
 list of keys
@@ -197,9 +202,25 @@ tag_movs had a single item, and rewrite the option list, either to [] or to a ne
 list
 hence it must be re-created every time logic module runs
 
+it is a list of theatre name keys
 '''
 class State:
-    def __init__(self):
-        self.question = 0
+    def __init__(self, resource):
+        self.question = 0  # 0 for movies, 1 for num tickets, 2 for theatre
+
         self.options = []
         self.option_type = 0 #for theatres, 1 for movies
+
+        self.timeout = 0
+
+        self.req = MovieRequest(resource)
+
+        chatLines = []
+        self.conversation = Conversation(chatLines)
+
+        # must be mutable so that the alias will mess with it
+        self.s_time = []
+        self.s_tday = []
+
+    def add_line(self, line_string):
+        self.conversation.chatLines.append(ChatLine(content=line_string))
