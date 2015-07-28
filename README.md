@@ -8,22 +8,16 @@ natural language movie requests for Magic Tiger
 
 dependencies:
 
-+BeautifulSoup
++BeautifulSoup4
+
++lxml
 
 +requests
 
 +sleekxmpp
 
 
-run Bot file on python interpreter
-
-`
-bot = Bot()
-
-bot.run()
-`
-
-Interact with bot on the console.
+run Bot file. Interact with bot on the console.
 
 Ask for a movie that's in theatres. Ask for 4 tickets. Suggest a time of day.
 Or suggest an exact time. Or ask for a theatre and suggest a time of day. Or
@@ -119,9 +113,9 @@ attributes to fulfill, we want to fit in as many as possible while also
 making sure it is all mutually compatible.
 
 There are many cases and sub-cases. For example:
-Case 1: we have one movie in the list of tags
-Case 2: we have a movie and a theatre, is this movie playing at this theatre?
-Case 3: we have multiple movies and one theatre. Which movies are playing at the theatre?
+Case 1: We have one movie in the list of tags
+Case 2: We have a movie and a theatre, is this movie playing at this theatre?
+Case 3: We have multiple movies and one theatre. Which movies are playing at the theatre?
 Case 4: We have one movie and one time of day. Which theatres can we return?
 And so on.
 The order of attempting-to-fit multiple options is movies - theatres - time. So it might input a movie
@@ -178,10 +172,16 @@ instance at any time, for any number of concurrent users, because each call to t
 past state information and current user input. But this state object will still have to be stored somewhere,
 and tied into the onging user resource.
 
+######User Cases / Debugging
+Should work for
+- any amount of attributes (including all or none) given per input message
+- given only a movie, optional time, it suggests theatre showtimes for time
+- given only a theatre, optional time, it suggests movies at time
+- given movie and theatre, it suggests times
+- remembers times given on previous input and uses that to filter answers
+                      
 ######Generalising
 How to generalise to a bot for booking travel tickets, or for buying groceries:
-
-
 
 General principles - creating the knowledge base, tokenising user input, forming logical rules -
 as described in the readme are broadly applicable.  The Knowledge base itself would of course completely change.
@@ -207,11 +207,17 @@ hunter-gathering, works on the fly, but farming is better.
 
 - save all past information returned by the narrow() sub-functions in some sort of State
 object, which should keep track of both the question and the narrowed down options
+-suggestions for what to type in (for example - when you ask for a movie,
+suggest that you can narrow down results by showtime. 
+
 
 (little improvements)
 - long if/else cases in logic are awkward (but it seems to work). what alternatives?
 - options for choosing a different day (will need to scrape theatres for the
 next day as well, and tie that into our knowledge base)
+- if user chooses a theatre with only one possible showtime, add showtime as well
+- displaying movies should also show the showtimes
+- if only a single option is given, ask for confirmation and use it as req
 -adding an option to select More info if the length of information returned is too much
 ***
 

@@ -15,11 +15,11 @@ has_correct_movies code:
 2 for more than one
 '''
 def narrow_movies(req,tag_movs,ntm):
-    r1 = 0, "Which movie would you like to see?"
+    r1 = -1, "Which movie would you like to see?"
     if req.done[0] != 1: # doesn't re-write if a movie is already selected
         if len(tag_movs) == 1:
             m_nice = ntm[tag_movs[0]].title
-            req.add_title(m_nice)
+            req.add_field(0, m_nice)
             r1 = 1, ""
 
          # use for indexing! never gets here because eval doesn't check for it
@@ -36,8 +36,8 @@ update the options in state
 returns tuple r2 of Int has_correct_theatre (0,1, or 2), message
 '''
 def narrow_theatres(req,tag_theats,ntm, ntt, options, s_tday, s_time):
-    mk = req.title.lower()
-    r2 = 0, "At which theatre?"
+    mk = req.fields[0].lower()
+    r2 = -1, "At which theatre?"
 
     # take care of theatres, either we find 0, 1 or more than 1
     if len(tag_theats) == 1:
@@ -45,7 +45,7 @@ def narrow_theatres(req,tag_theats,ntm, ntt, options, s_tday, s_time):
         t_nice = ntt[t].bms_name
 
         if req.done[4]:
-            frames = req.time.ask_frame()
+            frames = req.fields[4].ask_frame()
         elif len(s_tday) == 1:
             frames = s_tday
         elif len(s_time) == 1:
@@ -55,17 +55,17 @@ def narrow_theatres(req,tag_theats,ntm, ntt, options, s_tday, s_time):
 
         if req.done[0]:
             # check if movie is in theatre today
-            ans, statement = get_movies_at_theatre(t_nice, ntm, ntt, frames, req.title)
+            ans, statement = get_movies_at_theatre(t_nice, ntm, ntt, frames, req.fields[0])
             d = ntt[t].movies
             if len(d.get(mk, [])) == 0:
-                r2 = 0, statement #"Sorry, but {} isn't showing at {} today.".format(req.title, t_nice)
+                r2 = 0, statement 
             else:
-                r2 = 1, statement #"Possible showings today: "+ ' '.join([t.printout() for t in d.get(mk)])
-                req.add_theatre(t_nice)
+                r2 = 1, statement 
+                req.add_field(2, t_nice)
         else:
             # given a movie but don't have a theatre
             # return list of potential movies
-            req.add_theatre(t_nice)
+            req.add_field(2, t_nice)
             ans, statement = get_movies_at_theatre(t_nice, ntm, ntt, frames)
             r2 = 1, statement
 
@@ -75,20 +75,19 @@ def narrow_theatres(req,tag_theats,ntm, ntt, options, s_tday, s_time):
         if req.done[0]:
             ft = [t for t in tag_theats if len(ntt[t].movies.get(mk, [])) > 0]
             if len(ft) == 0:
-                statement = "{} isn't playing at any of those locations today".format(req.title)
+                statement = "{} isn't playing at any of those locations today".format(req.fields[0])
             else:
                 ft_nice = [ntt[t].bms_name for t in ft]
                 [options.append(t) for t in ft]
-                statement = "{} is playing in:\n".format(req.title) \
+                statement = "{} is playing in:\n".format(req.fields[0]) \
                             + '\n'.join(['{}. {}'.format(i+1, t) for i, t in enumerate(ft_nice)])
-                            #'\n'.join(ft_nice)
-                # support user choosing numbers!
+                # supports user choosing numbers!
             r2 = 2, statement
         else:
             tag_theats_nice = [ntt[t].bms_name for t in tag_theats]
             statement = "Possible theatre options:\n" \
                         + '\n'.join(['{}. {}'.format(i+1, t) for i, t in enumerate(tag_theats_nice)])
-            [options.append(t.lower()) for t in tag_theats_nice]
+            [options.append(t) for t in tag_theats]
             r2 = 2, statement
 
     return r2
@@ -101,9 +100,10 @@ helper function for narrow_num
 def check_if_option(req, ntt, all_nums, s_options, times):
     if len(s_options)>0:
         if len(all_nums) == 1:
-            #index into option list
+            # index into option list
+            # ASSUMING that option is a theatre, todo expand to movies
             chosen_option =ntt[s_options[int(all_nums[0])-1]].bms_name
-            req.add_theatre(chosen_option)
+            req.add_field(2, chosen_option)
 
         # remove all options
         [s_options.pop() for i in range(len(s_options))]
@@ -127,22 +127,25 @@ Integer ticket_num, String[] tday, String[] times
 returns r3, r4, similar tuples with code, message for number of tickets and times
 '''
 def narrow_num(req, all_nums, tday, ticket_num, times, ntm, ntt, s_options, s_tday, s_time):
-    r3 = 0, "How many tickets?"
-    r4 = 0, "What time?"
+    r3 = -1, "How many tickets?"
+    r4 = -1, "What time?"
 
     # number of tickets
     if ticket_num != -1:
         assert(isinstance(ticket_num,int))
-        req.add_tickets(ticket_num)
+        req.add_field(1, ticket_num)
         t_form = "You've got {} ticket{}".format(str(ticket_num),("" if ticket_num==1 else "s"))
         r3 = 1, t_form
 
     # pick a showtime or a time of day
     # showtime overrides time of day
 
-    #we have a singular time options
+    # we have a singular time options
     day,time = len(tday) == 1, len(times) == 1
+    # don't forget information that may have been mentioned at some other time
+    day1, time1 = len(s_tday) == 1, len(s_time) == 1
 
+    
     '''
     get_options()
     helper function
@@ -155,12 +158,12 @@ def narrow_num(req, all_nums, tday, ticket_num, times, ntm, ntt, s_options, s_td
     # return a list of times that the movie is playing there
     #returns []Time
     '''
-    def get_options(time):
-        if time: frames = times[0].ask_frame()
-        else: frames = [string_to_frame(tday[0])]
+    def get_options(time_a, times_a, tday_a):
+        if time_a: frames = times_a[0].ask_frame()
+        else: frames = tday_a
         # at least one of these must not be None!!
-        m_nice = (req.title if req.done[0] else "")
-        t_nice = (req.theatre if req.done[2] else "")
+        m_nice = (req.fields[0] if req.done[0] else "")
+        t_nice = (req.fields[2] if req.done[2] else "")
         #Way too may options usually- so it only prints out the first 400 chars
         # maybe it should just remember the time/ time of day and
         # wait until a specific theatre is given
@@ -175,44 +178,102 @@ def narrow_num(req, all_nums, tday, ticket_num, times, ntm, ntt, s_options, s_td
             # options: movie, showtimes
             options, statement = get_movies_at_theatre(t_nice, ntm, ntt, frames, m_nice)
         return options, statement
+    '''
+    helper function to sort through cases for different option lengths
+    time could have been given in on the tags here, or could have
+    been saved times from previous tags
+    '''
+    def sort_options(time_a, times_a, tday_a):
+        options, statement = get_options(time_a, times_a, tday_a)
+        #3 cases
+        if len(options) == 0: 
+            r4 = 0, statement
 
-    # with tday
+        elif len(options) == 1:
+            showtimes = options[0][1]
+
+            if len(showtimes) == 1: req.add_field(4, showtimes[0])
+            r4 = min(len(showtimes), 2), statement
+
+            #if a specific time has been chosen, then look for similar showtimes
+            if time:
+                for time1 in showtimes:
+                    if time_diff(time1,times_a[0]) <= 30:
+                        req.add_field(4, time1)
+                        r4 = 1, ""
+                    if time_diff(time1, times_a[0]) <= 10:
+                        req.add_field(4,time1)
+                        r4 = 1, ""
+                        continue
+        else:
+            #list of movies and theatres, cut off because it can get long
+            if not req.done[2]: #todo must generalise to movies
+                [s_options.append(opt[0].lower()) for opt in options]
+            r4 = 2, statement[:400] + '...'
+            
+        return r4
+    
+    
     if day or time:
         if req.done[0] or req.done[2]:
-            options, statement = get_options(time)
-            # we have options for the customer
-            # cases for changing the returned statement
-            if len(options) == 0: #no showtimes for the given combination
-                r4 = 0, statement
-
-            elif len(options) == 1:
-                showtimes = options[0][1]
-                if len(showtimes) == 1: req.add_time(showtimes[0])
-                r4 = min(len(showtimes), 2), statement
-
-                #if a specific time has been chosen, then look for similar showtimes
-                if time:
-                    for time1 in showtimes:
-                        if time_diff(time1,times[0]) <= 30:
-                            req.add_time(time1)
-                            r4 = 1, ""
-            else:
-                #list of movies and theatres, cut off because it can get long
-                if not req.done[2]: #todo must generalise to movies
-                    [s_options.append(opt[0].lower()) for opt in options]
-                r4 = 2, statement[:400] + '...'
+            r4 = sort_options(time, times, tday)
         else:
             # no movie, no theatre either
             # just add the time and add functionality in narrow_movies and narrow_theatres for
             # checking time todo
-            if day: s_tday.append(string_to_frame(tday[0]))
+            if day: s_tday.append(tday[0])
             if time: s_time.append(times[0])
             r4 = 1, ""
+
+    elif day1 or time1:
+        if req.done[0] or req.done[2]:
+            r4 = sort_options(time1, s_time, s_tday)
+        else: pass
     # we have multiple time options>>
     if len(times) > 1:
         r4 = 2, "Multiple times selected."
 
     return r3, r4
+
+'''
+logic is weird.
+
+given that we have a sequence of checking different attributes
+(answer was an option - movie - theatre - time), we have to do
+a lot of repetitive reasoning within each one because we do not consider
+all the information as a whole - if the person says 'i want to see bajrangi this
+evening at innovative', it will
+-insert bajrangi into the req object, then
+-look for all the theatres that show it this evening and create a message for
+that, and then
+-attempt to search for showtimes this evening at innovative for bajrangi
+
+(we know a theatre and a movie, what
+are the times? we know two times and a movie, what are the theatres?) or
+we re-check everything at the end, taking into account the saved state
+information that we didn't enter into the movie list
+
+basically sweeping up loose edge cases
+'''
+def final_reasoning(req, t_day, timeout):
+    statement = ''
+    help_s = 'You can tell me a movie title, a theatre name and/or a time of day for a list of options. '
+
+    # case: if we haven't learned anything yet, give options
+    if req.last == -1:
+        statement = 'I can help you book a ticket. ' + help_s
+    # todo if self.done[0] and self.done[2]
+
+    # after a certain number of attempts at the same question, we change to a human
+    if timeout >= 3:
+        statement = 'Cant quite understand you. ' + help_s
+    
+    if sum(req.done)<5:
+        next_q = req.done.index(False)
+    else: next_q = -1
+
+    return next_q, statement
+
 
 '''
 
@@ -244,9 +305,8 @@ def narrow(state, tags, ntm, ntt):
     r2 = narrow_theatres(req,tag_theats,ntm, ntt, options, s_tday, s_time)
     r3, r4 = narrow_num(req, all_nums, tday, t_num, times, ntm, ntt, options, s_tday, s_time)
 
-    #print(tag_theats)
-    #print('r4',r4)
-    return evaluate(req, r1, r2, r3, r4)
+    f = final_reasoning(state.req,state.s_tday, state.timeout)
+    return evaluate(req, r1, r2, r3, r4,f)
 
 
 
@@ -271,17 +331,22 @@ Checks if there are any important messages in movie, messages from time, then
  movie, then theatre, then time, then number of tickets
  if these are all good, then it returns the request readout
 '''
-def evaluate(req, r1, r2, r3, r4):
-    theatre_has_message = (req.done[2] ==1 and r2[0] == 1 and len(r2[1])>0)
-    time_has_message = ((r4[0] == 1 or r4[0] == 2) and len(r4[1])>0)
+def evaluate(req, r1, r2, r3, r4, f):
+    f_has_message = len(f[1])>0
+    theatre_has_message = r2[0]>=0 and len(r2[1])>0
+    '''theatre_has_message_2 = req.done[2] >= 1 and len(r2[1])>0
+    not working because when an option is chosen, req.done[2]=1
+    but an item might not have been chosen this time around'''
+    
+    time_has_message = r4[0] >= 0 and len(r4[1])>0
     no_movie = req.done[0] == 0
     no_theatre = req.done[2] == 0
     no_time = req.done[4] == 0
     no_ticket_num = req.done[1] == 0
-
-    returns = [theatre_has_message,time_has_message,
+    
+    returns = [f_has_message, time_has_message, theatre_has_message,
                no_movie,no_theatre,no_time,no_ticket_num,True]
-    to_return = [(4, r2[1]),(4, r4[1]),
+    to_return = [f, (4, r4[1]),(4, r2[1]),
                  (0, r1[1]),(2, r2[1]),(4, r4[1]),(1, r3[1]),(-1,req.readout())]
     i = returns.index(True)
     return to_return[i]
