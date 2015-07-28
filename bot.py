@@ -141,7 +141,7 @@ class Bot:
             except IndexError:
                 continue
 
-            if inp.__eq__('bye'):
+            if inp.lower() == ('bye'):
                 print("Goodbye!")
                 close()
                 return

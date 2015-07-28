@@ -16,16 +16,17 @@ has_correct_movies code:
 '''
 def narrow_movies(req,tag_movs,ntm):
     r1 = -1, "Which movie would you like to see?"
-    if req.done[0] != 1: # doesn't re-write if a movie is already selected
-        if len(tag_movs) == 1:
-            m_nice = ntm[tag_movs[0]].title
-            req.add_field(0, m_nice)
-            r1 = 1, ""
+    # doesn't re-write if a movie is already selected
+    nice_movs = [ntm[t] for t in tag_movs]
+     
+    if len(tag_movs) == 1:
+        m_nice = nice_movs[0].title
+        req.add_field(0, m_nice)
+        r1 = 1, ""
 
-         # use for indexing! never gets here because eval doesn't check for it
-        if len(tag_movs) > 1:
-            statement = '\n'.join(['{}. {}'.format(i, t) for i, t in enumerate(tag_movs)])
-            r1 = 2, "Possible options: " + statement
+    elif len(tag_movs) > 1:
+        statement = '\n'.join(['{}. {}'.format(i+1, t) for i, t in enumerate(nice_movs)])
+        r1 = 2, "Possible options: " + statement
     return r1
 
 '''
@@ -337,7 +338,7 @@ def evaluate(req, r1, r2, r3, r4, f):
     '''theatre_has_message_2 = req.done[2] >= 1 and len(r2[1])>0
     not working because when an option is chosen, req.done[2]=1
     but an item might not have been chosen this time around'''
-    
+    movie_has_message = r1[0]==2 and len(r1[1])>0
     time_has_message = r4[0] >= 0 and len(r4[1])>0
     no_movie = req.done[0] == 0
     no_theatre = req.done[2] == 0
@@ -345,9 +346,11 @@ def evaluate(req, r1, r2, r3, r4, f):
     no_ticket_num = req.done[1] == 0
     
     returns = [f_has_message, time_has_message, theatre_has_message,
-               no_movie,no_theatre,no_time,no_ticket_num,True]
+               movie_has_message, no_movie,no_theatre,no_time,
+               no_ticket_num,True]
     to_return = [f, (4, r4[1]),(4, r2[1]),
-                 (0, r1[1]),(2, r2[1]),(4, r4[1]),(1, r3[1]),(-1,req.readout())]
+                 (0, r1[1]), (0, r1[1]),(2, r2[1]),(4, r4[1]),
+                 (1, r3[1]),(-1,req.readout())]
     i = returns.index(True)
     return to_return[i]
 

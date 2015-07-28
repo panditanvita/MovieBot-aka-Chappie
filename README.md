@@ -66,6 +66,8 @@ timeout ends the bot if it detects that the bot is stuck.
 The final product of the bot is the request object printout which summarises all the compatible information
 learned so far.
 
+***
+                      
 ###Knowledge : scraping and parsing information from the internet/stored files
 
 ####knowledge.py:
@@ -80,8 +82,6 @@ Note: American spelling is 'theater', so google html code uses that.
 Indian/British spelling is 'theatre' and my code uses this!
 
 Speed: takes about five seconds to finish
-***
-
 ***
 ###Tokeniser: tokenises and tags information from the customer
 
@@ -102,8 +102,6 @@ never used - people will mention several keywords out of order like 'pvr koraman
 
 The current implementation attempts to look for a subset of matching keywords , and narrows
 down the total space as far as possible. It returns all best matching options.
-***
-
 ***
 ###Logic: takes tokenised information and attempts to fill in the request object
 
