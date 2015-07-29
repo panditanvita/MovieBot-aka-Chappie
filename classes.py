@@ -200,7 +200,6 @@ class State:
         chatLines = []
         self.conversation = Conversation(chatLines)
 
-        # must be mutable so that the alias will mess with it
         self.s_time = []
         self.s_tday = []
 

@@ -42,7 +42,9 @@ time = r'(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d{1,2})(?:\s?[a|p]m)?'
 def tokeniser(inp):
     words = inp.lower()
     # remove punctuation
-    words = re.sub(r'''\[\][,;#"'\?()-_`]''', "", words)
+    # todo replace odd characters surrounded by letters, they're typos
+    words = re.sub(r'''[%,;#\-'\?]''', " ", words)
+    words = re.sub(r'''[']''', "", words)
     # don't remove punctuation used for time
     words = re.sub(r'(?<=\D)(\.|:)(?=\D?)', r" ", words)
     # cut down whitespace jic

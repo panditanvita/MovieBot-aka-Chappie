@@ -215,6 +215,8 @@ suggest that you can narrow down results by showtime.
 next day as well, and tie that into our knowledge base)
 - if user chooses a theatre with only one possible showtime, add showtime as well
 - displaying movies should also show the showtimes
+- make sure movie address with single letters doesn't match to input
+with single letters, like M S nagar should match to 's'
 - if only a single option is given, ask for confirmation and use it as req
 -adding an option to select More info if the length of information returned is too much
 ***
