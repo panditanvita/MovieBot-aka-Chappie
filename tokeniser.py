@@ -116,7 +116,7 @@ def tag_tokens_number(tokens, question):
     # because we are parsing title names somewhere else!
     all_nums = filter(lambda x: re.match(r"\d", x) is not None, tokens)
     times_of_day = tag_tokens_time(tokens)
-    #enforce tday is a list of Integer frames?
+    #times_of_day is a list of Integer frames
 
     # if we are looking specifically for number of tickets, then it just chooses the
     # first number found

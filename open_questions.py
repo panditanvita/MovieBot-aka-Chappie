@@ -75,14 +75,19 @@ get_theatres_for_movie(movie_name, ntt, optional time)
 
 String movie_name must be a proper key, but even then it might not exist in the theatre.movies dictionary
 input: String movie_name, ntt dictionary, optional time frame list
+List of theatres is a list of theatre name keys that movie search should be
+limited to
 
 returns two items: data structure, a [list of tuples (String theatre.bms_name, Time[] showtimes) for all theatres],
 formatted statement for user explaining where the movie is playing
 
 '''
-def get_theatres_for_movie(m_nice, ntm, ntt, time):
+def get_theatres_for_movie(m_nice, ntm, ntt, time, theatres):
     answers, statement = [], ""
-    for theatre in ntt.values():
+    if len(theatres)>0:
+        vals = [ntt[t] for t in theatres]
+    else: vals = ntt.values()
+    for theatre in vals:
         # should return either mktuple of movie_name, Time[] showtimes or an empty list
         playing = get_movies_at_theatre(theatre.bms_name, ntm, ntt, time, m_nice)[0]
         i = len(answers) +1
@@ -92,7 +97,11 @@ def get_theatres_for_movie(m_nice, ntm, ntt, time):
 
     time_statement = get_time_statement(time)
 
-    if len(statement) == 0: statement = "Sorry, that movie isn't playing {}".format(time_statement)
+    if len(statement) == 0:
+        if len(theatres) == 0:
+            statement = "Sorry, {} isn't playing {}".format(m_nice, time_statement)
+        else:
+            statement = "Sorry, {} isn't playing at those locations {}".format(m_nice, time_statement)
     else: statement = "{} is playing at: \n{}".format(m_nice, statement)
 
     return answers, statement

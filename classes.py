@@ -147,6 +147,7 @@ class MovieRequest:
         self.done[ind] = 1
         self.last = ind
         self.fields[ind] = field
+        return self
 
     def readout(self):
         t = (' for the {} showtime, '.format(self.fields[4].printout()) if self.done[4] else ", ")
