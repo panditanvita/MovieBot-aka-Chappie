@@ -203,5 +203,7 @@ class State:
         self.s_time = []
         self.s_tday = []
 
+        self.starting = True
+
     def add_line(self, line_string):
         self.conversation.chatLines.append(ChatLine(content=line_string))

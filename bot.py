@@ -86,8 +86,7 @@ class Bot:
         else: self.state.timeout = 0
         self.state.question = question
 
-        if len(self.state.conversation.chatLines)==1: statement = "Hello, this is MovieBot!\n"+ statement
-
+        self.state.starting = False
         return statement
 
     '''
@@ -157,9 +156,9 @@ class Bot:
                 print(response)
 '''
 for debugging
-'''
+
 bot = Bot()
 bot.run()
-'''
+
 bye
 '''

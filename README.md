@@ -56,13 +56,19 @@ idea of an 'expert system' with a knowledge base and logical rule-set.
 keeps track of state in a State object and can respond to certain movie-related inputs
 
 State object has a question, options list, MovieRequest object, timeout counter and conversation log.
-Question corresponds to the attribute the bot is expecting to here about, and is used in the
+
+Question corresponds to the attribute the bot is expecting to hear about, and is used in the
 tagging functions, to favor entities which are indicated by the question. For example -
 if question is 1, then the tagging functions try harder to find a valid movie title.
+
 If the bot response involves multiple options, we want to make it easier for the customer
-to choose a specific one. Option field keeps track of previously given options, if the bot gave
+to choose a specific one.
+
+Option field keeps track of previously given options, if the bot gave
 a list of valid theatres or movies, for example.
+
 timeout ends the bot if it detects that the bot is stuck.
+
 The final product of the bot is the request object printout which summarises all the compatible information
 learned so far.
 
@@ -161,14 +167,11 @@ Super basic user data - just location - would really improve finding the theatre
 
 The current design is to have a single response to every line of input from the customer
 There are other possible options, which might be better, depending on the use case.
+                      
 1. the bot only responds to new information
 
 2. the bot combines texts which come in within a few seconds of each other into one input set
 
-3. save conversation and request as part of the state, and then you only need to query a single bot
-instance at any time, for any number of concurrent users, because each call to the bot will include all
-past state information and current user input. But this state object will still have to be stored somewhere,
-and tied into the onging user resource.
 
 ######User Cases / Debugging
 Should work for
@@ -226,6 +229,6 @@ levenshtein edit distance function from wiki
 
 xmpp_bot mostly from the sleek_xmmp boilerplate
 
-All other code written by me, Anvita Pandit, for commercial application with Magic Tiger.
+All other code written by me, Anvita Pandit, for use by Magic Tiger.
 
 

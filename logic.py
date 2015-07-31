@@ -30,7 +30,7 @@ def narrow_movies(req,tag_movs,ntm):
     elif len(tag_movs) > 1:
         #todo this needs to be supported by the state options lisst
         #statement = '\n'.join(['{}. {}'.format(i+1, t) for i, t in enumerate(nice_movs)])
-        statement = '\n'.join(['{}. {}'.format(t) for t in nice_movs])
+        statement = '\n'.join(nice_movs)
         r1 = 2, "Possible options: " + statement
     return r1, req
 
@@ -109,7 +109,7 @@ def check_if_option(state, ntt, all_nums,times):
             # ASSUMING that option is a theatre, todo expand to movies
             chosen_option =ntt[state.options[int(all_nums[0])-1]].bms_name
             state.req = state.req.add_field(2, chosen_option)
-        print('Choosing option:{}'.format(chosen_option))
+            # print('Choosing option - {}'.format(chosen_option))
         # remove all options
         state.options = []
         # make sure the number chosen here isn't also taken for a time
@@ -117,7 +117,6 @@ def check_if_option(state, ntt, all_nums,times):
             times = []
         #if len(s_time)==1: shouldn't be necessary because we clear it
         #    s_time = [] before it gets to the narrow_num function
-    
     return state, times, chosen
 
 '''
@@ -166,7 +165,7 @@ def sort_options(req, time_a, times_a, tday_a, ntm, ntt):
         r4 = min(len(showtimes), 2), statement
 
         #if a specific time has been chosen, then look for similar showtimes
-        if time:
+        if time_a:
             for time1 in showtimes:
                 if time_diff(time1,times_a[0]) <= 30:
                     req = req.add_field(4, time1)
@@ -269,14 +268,16 @@ def final_reasoning(state, chosen, ntm, ntt):
     statement = ''
     help_s = 'You can tell me a movie title, a theatre name and/or a time of day for a list of options. '
 
-    # case: if we haven't learned anything yet, give options
-    if req.last == -1:
-        statement = 'I can help you book a ticket. ' + help_s
+    # case: 
+    # if it's the first time the customer speaks, give help message
+    if state.starting:
+        statement = 'Hello, this is MovieBot!\nI can help you book a ticket. ' + help_s
+        
     # todo if self.done[0] and self.done[2]
 
     # after a certain number of attempts at the same question, we change to a human
-    if timeout >= 3:
-        statement = 'Cant quite understand you. ' + help_s
+    if timeout >= 4:
+        statement = 'Are you having issues? ' + help_s
 
     # if we're not done, choose another statement
     if sum(req.done)<5:
@@ -285,10 +286,10 @@ def final_reasoning(state, chosen, ntm, ntt):
             next_q = 4
         #todo change self.done to match order wanted
         #right now it's placing ticket num before showtime
-    else: next_q = -1
+    else: next_q, statement = (-1, 'Thanks! Your ticket is:\n' + req.readout())
     
-    #if we've finished getting a movie and a theatre 
-    if chosen:
+    #if we've finished getting a movie and a theatre through option selection
+    if chosen and req.done[0] and req.done[2]:
         #look for and specify frames
         frames = find_frames(req, s_tday, state.s_time)
         o, statement = get_movies_at_theatre(req.fields[2], ntm, ntt,frames,req.fields[0])
@@ -344,7 +345,7 @@ def narrow(state, tags, ntm, ntt):
     r3, r4, state = narrow_num(state, all_nums, tday, t_num, times, ntm, ntt)
 
     f = final_reasoning(state, chosen, ntm, ntt)
-    return evaluate(state.req, r1, r2, r3, r4, f)
+    return evaluate(state, r1, r2, r3, r4, f)
 
 
 
@@ -372,7 +373,8 @@ of a movie, theatres, time and number of tickets in that order
 
 if these are all good, ie we are done then it returns the request readout
 '''
-def evaluate(req, r1, r2, r3, r4, f):
+def evaluate(state, r1, r2, r3, r4, f):
+    req = state.req
     f_has_message = len(f[1])>0
     theatre_has_message = r2[0]>=0 and len(r2[1])>0
     '''theatre_has_message_2 = req.done[2] >= 1 and len(r2[1])>0
@@ -388,11 +390,17 @@ def evaluate(req, r1, r2, r3, r4, f):
     returns = [f_has_message, time_has_message, theatre_has_message,
                movie_has_message, no_movie,no_theatre,no_time,
                no_ticket_num,True]
-    to_return = [f, (4, r4[1]),(4, r2[1]),
+    to_return = [f, (4, r4[1]),(f[0], r2[1]),
                  (0, r1[1]), (0, r1[1]),(2, r2[1]),(4, r4[1]),
                  (1, r3[1]),(-1,req.readout())]
-    i = returns.index(True)
-    return to_return[i]
+
+    if state.starting:
+        statement = to_return[returns[1:].index(True)+1]
+        #print('returning_start', returns[1:].index(True))
+        return statement[0],'{}\n{}'.format(f[1],statement[1])
+
+    #print('returning', returns.index(True))
+    return to_return[returns.index(True)]
 
 print("Logic module loaded")
 
