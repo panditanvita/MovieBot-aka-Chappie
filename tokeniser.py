@@ -42,7 +42,9 @@ time = r'(?:\d{3,4}|(?:\d{1,2}[\.:\s]\d{2})|\d{1,2})(?:\s?[a|p]m)?'
 def tokeniser(inp):
     words = inp.lower()
     # remove punctuation
-    words = re.sub(r'''\[\][,;#"'\?()-_`]''', "", words)
+    # todo replace odd characters surrounded by letters, they're typos
+    words = re.sub(r'''[%,;#\-'\?]''', " ", words)
+    words = re.sub(r'''[']''', "", words)
     # don't remove punctuation used for time
     words = re.sub(r'(?<=\D)(\.|:)(?=\D?)', r" ", words)
     # cut down whitespace jic
@@ -115,14 +117,16 @@ def tag_tokens_number(tokens, question):
     # this will not break if the movie title is a number
     # because we are parsing title names somewhere else!
     all_nums = filter(lambda x: re.match(r"\d", x) is not None, tokens)
-    times_of_day = tag_tokens_time(tokens) #enforce tday is a list of strings..or frames?
+    times_of_day = tag_tokens_time(tokens)
+    #times_of_day is a list of Integer frames
 
     # if we are looking specifically for number of tickets, then it just chooses the
     # first number found
     # it looks to see if there was a number mentioned before the word "tickets"
     # and that overrides
     ticket_num = -1
-    if question == 1: ticket_num = int(all_nums[0]) # ticket num must be a reasonable number?
+    if question == 1 and len(all_nums)>0:
+        ticket_num = int(all_nums[0]) # ticket num must be a reasonable number?
     try:
         i = tokens.index("tickets")
         if tokens[i-1] in all_nums: ticket_num = int(tokens[i-1])
@@ -146,8 +150,9 @@ def tag_tokens_number(tokens, question):
 '''
 helper function for tags_tokens_number()
 
-checks for times
-days of the week, times of the day
+checks for time frames, returns list of integers
+
+eventually, days of the week, times of the day
 '''
 def tag_tokens_time(tokens):
     p1 = "(2|to)(nite|night)"
@@ -161,7 +166,7 @@ def tag_tokens_time(tokens):
     time_tags = ['morning','afternoon','evening','night']
     def is_time(token):
         l = [typo(t, token) for t in time_tags]
-        if sum(l)>0: return time_tags[l.index(True)]
+        if sum(l)>0: return l.index(True)
         return None
 
     return [is_time(token) for token in tokens if is_time(token) is not None] #allow for typos here

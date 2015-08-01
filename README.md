@@ -8,22 +8,16 @@ natural language movie requests for Magic Tiger
 
 dependencies:
 
-+BeautifulSoup
++BeautifulSoup4
+
++lxml
 
 +requests
 
 +sleekxmpp
 
 
-run Bot file on python interpreter
-
-`
-bot = Bot()
-
-bot.run()
-`
-
-Interact with bot on the console.
+run Bot file. Interact with bot on the console.
 
 Ask for a movie that's in theatres. Ask for 4 tickets. Suggest a time of day.
 Or suggest an exact time. Or ask for a theatre and suggest a time of day. Or
@@ -62,16 +56,24 @@ idea of an 'expert system' with a knowledge base and logical rule-set.
 keeps track of state in a State object and can respond to certain movie-related inputs
 
 State object has a question, options list, MovieRequest object, timeout counter and conversation log.
-Question corresponds to the attribute the bot is expecting to here about, and is used in the
+
+Question corresponds to the attribute the bot is expecting to hear about, and is used in the
 tagging functions, to favor entities which are indicated by the question. For example -
 if question is 1, then the tagging functions try harder to find a valid movie title.
+
 If the bot response involves multiple options, we want to make it easier for the customer
-to choose a specific one. Option field keeps track of previously given options, if the bot gave
+to choose a specific one.
+
+Option field keeps track of previously given options, if the bot gave
 a list of valid theatres or movies, for example.
+
 timeout ends the bot if it detects that the bot is stuck.
+
 The final product of the bot is the request object printout which summarises all the compatible information
 learned so far.
 
+***
+                      
 ###Knowledge : scraping and parsing information from the internet/stored files
 
 ####knowledge.py:
@@ -86,8 +88,6 @@ Note: American spelling is 'theater', so google html code uses that.
 Indian/British spelling is 'theatre' and my code uses this!
 
 Speed: takes about five seconds to finish
-***
-
 ***
 ###Tokeniser: tokenises and tags information from the customer
 
@@ -109,8 +109,6 @@ never used - people will mention several keywords out of order like 'pvr koraman
 The current implementation attempts to look for a subset of matching keywords , and narrows
 down the total space as far as possible. It returns all best matching options.
 ***
-
-***
 ###Logic: takes tokenised information and attempts to fill in the request object
 
 ####logic.py
@@ -119,9 +117,9 @@ attributes to fulfill, we want to fit in as many as possible while also
 making sure it is all mutually compatible.
 
 There are many cases and sub-cases. For example:
-Case 1: we have one movie in the list of tags
-Case 2: we have a movie and a theatre, is this movie playing at this theatre?
-Case 3: we have multiple movies and one theatre. Which movies are playing at the theatre?
+Case 1: We have one movie in the list of tags
+Case 2: We have a movie and a theatre, is this movie playing at this theatre?
+Case 3: We have multiple movies and one theatre. Which movies are playing at the theatre?
 Case 4: We have one movie and one time of day. Which theatres can we return?
 And so on.
 The order of attempting-to-fit multiple options is movies - theatres - time. So it might input a movie
@@ -169,25 +167,30 @@ Super basic user data - just location - would really improve finding the theatre
 
 The current design is to have a single response to every line of input from the customer
 There are other possible options, which might be better, depending on the use case.
+                      
 1. the bot only responds to new information
 
 2. the bot combines texts which come in within a few seconds of each other into one input set
 
-3. save conversation and request as part of the state, and then you only need to query a single bot
-instance at any time, for any number of concurrent users, because each call to the bot will include all
-past state information and current user input. But this state object will still have to be stored somewhere,
-and tied into the onging user resource.
 
+######User Cases / Debugging
+Should work for
+- any amount of attributes (including all or none) given per input message
+- given only a movie, optional time, it suggests theatre showtimes for time
+- given only a theatre, optional time, it suggests movies at time
+- given movie and theatre, it suggests times
+- remembers times given on previous input and uses that to filter answers
+                      
 ######Generalising
 How to generalise to a bot for booking travel tickets, or for buying groceries:
-
-
 
 General principles - creating the knowledge base, tokenising user input, forming logical rules -
 as described in the readme are broadly applicable.  The Knowledge base itself would of course completely change.
 Tokenising would have to be adapted to incorporate new slang and tag different entity groups, like Cities.
+
 Logic currently selects:
-1 or many (available) movies, 1 or many (available) theatres, a given or range of showtimes, all mutually compatible
+
+1 or many (available) movies, 1 or many (available) theatres, a given or range of showtimes, all mutually compatible.
 For bus tickets: To and From are set, a given or range of departure times
 For groceries: 1 or more items, with quantities.
 For logically similar cases like booking bus tickets, one would be able to reuse some of the logic functions.
@@ -197,18 +200,27 @@ For logically similar cases like booking bus tickets, one would be able to reuse
 - (most important) API is biggest bottleneck to a better bot - with it, we can use the request printout generated as a confirmation
 ticket for the customer, and go ahead booking the ticket for them with the bot as well. We would also need further
 questions, such as suggesting seat type (far from the screen, close) based on what's available.
-google scraping doesn't return a lot of the valid showtimes - need
-the book my show api. also important because then we could keep a single static knowledge
+
+Google scraping doesn't return a lot of the valid showtimes - need
+the book my show api. Also important because then we could keep a single static knowledge
 base, which would allow us to keep adding information about each theatre. scraping is like
 hunter-gathering, works on the fly, but farming is better.
 
 - save all past information returned by the narrow() sub-functions in some sort of State
 object, which should keep track of both the question and the narrowed down options
+-suggestions for what to type in (for example - when you ask for a movie,
+suggest that you can narrow down results by showtime. 
+
 
 (little improvements)
 - long if/else cases in logic are awkward (but it seems to work). what alternatives?
 - options for choosing a different day (will need to scrape theatres for the
 next day as well, and tie that into our knowledge base)
+- if user chooses a theatre with only one possible showtime, add showtime as well
+- displaying movies should also show the showtimes
+- make sure movie address with single letters doesn't match to input
+with single letters, like M S nagar should match to 's'
+- if only a single option is given, ask for confirmation and use it as req
 -adding an option to select More info if the length of information returned is too much
 ***
 
@@ -217,6 +229,6 @@ levenshtein edit distance function from wiki
 
 xmpp_bot mostly from the sleek_xmmp boilerplate
 
-All other code written by me, Anvita Pandit, for commercial application with Magic Tiger.
+All other code written by me, Anvita Pandit, for use by Magic Tiger.
 
 

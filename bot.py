@@ -22,6 +22,16 @@ class Bot:
         self.state = State(resource)
 
     '''
+    handle potential crashing
+    '''
+    def sleek_get_response(self, message):
+        try:
+            response = self.get_response(message)
+        except:
+            response = "Chappie can't quite understand you!"
+        return response
+            
+    '''
     the bot thinks of what to say...
 
     handles movie-related String input from the user
@@ -76,12 +86,7 @@ class Bot:
         else: self.state.timeout = 0
         self.state.question = question
 
-        # after a certain number of attempts at the same question, we change to a human
-        if self.state.timeout > 3:
-            return "Can't quite understand you, I'll forward this chat to our chat reps."
-
-        if len(self.state.conversation.chatLines)==1: statement = "Hello, this is MovieBot!\n"+ statement
-
+        self.state.starting = False
         return statement
 
     '''
@@ -135,7 +140,7 @@ class Bot:
             except IndexError:
                 continue
 
-            if inp.__eq__('bye'):
+            if inp.lower() == ('bye'):
                 print("Goodbye!")
                 close()
                 return

@@ -52,7 +52,7 @@ class SleekMovieBot(ClientXMPP):
 
         body = msg['body']
         if msg['type'] in ('chat', 'normal'):
-            response = bot.get_response(body)
+            response = bot.sleek_get_response(body)
             msg.reply(response).send()
 
             if response == "Goodbye!":

@@ -249,7 +249,7 @@ def get_theatres():
         except requests.exceptions.ConnectionError:
             print("Err: Failed to connect to the internet")
             return False
-        soup = BeautifulSoup(r.text, from_encoding="utf-8")
+        soup = BeautifulSoup(r.text, 'lxml', from_encoding="utf-8")
 
         # numTheatres = len([m.start() for m in re.finditer('class=theater', r.text)])
 

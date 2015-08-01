@@ -118,11 +118,24 @@ class Time:
     def ask_frame(self):
         return [frame for frame in range(4) if self.get_frame(frame)]
 
-    def printout(self):
-        m = self.minutes
-        if m < 10: sm = str(0) + str(m)
-        else: sm = str(m)
-        out = "{}:{}".format(self.hours,sm)
+    '''
+    nice printout for the customer
+    '''
+    def printout(self, military=False):
+        h,m = self.hours,self.minutes
+        if m==0: sm=''
+        elif m < 10: sm = ':' + str(0) + str(m)
+        else: sm = ':'+str(m)
+
+        if h==12:
+            out = '12{}pm'.format(sm)
+        elif h>11:
+            out = '{}{}pm'.format(h-12, sm)
+        else:
+            out = '{}{}am'.format(h)
+        
+        if military: out = "{}:{}".format(self.hours,sm)
+        
         return out
 
 '''

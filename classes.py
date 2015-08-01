@@ -125,53 +125,35 @@ payment_method is 0 for COD, 1 for online
 class MovieRequest:
     # takes in customer id
     def __init__(self, customer):
+        self.fields = ["[]",0,"[]",'today',Time('3 am'),0]
+        '''
         self.title = "[]"  # Cased
         self.num_tickets = 0  # integer
         self.theatre = "[]"  # bms_name
         self.date = "today"
         self.time = Time('3 am')
         self.payment_method = 0
-
-        self.done = [0, 0, 0, 0, 0, 0]  # check for the six earlier attrs
+        '''
+        self.done = [0, 0, 0, 1, 0, 0]  # check for the six earlier attrs
+        self.last = -1 # check the last changed attribute
+        
         self.comments = ""
         self.customer = customer
 
     def remaining(self):
         return self.done
 
-    def add_title(self, title):
-        self.done[0] = 1
-        self.title = title
-
-    def add_tickets(self, numTickets):
-        self.done[1] = 1
-        self.num_tickets = numTickets
-
-    def add_theatre(self, theatre):
-        self.theatre = theatre
-        self.done[2] = 1
-        #return True, ""
-
-    def add_date(self, date): # either today, tomorrow, or a day of the week
-        self.date = date
-        self.done[3] = 1
-        #return True, ""
-
-    def add_time(self, time):
-        self.time = time
-        self.done[4] = 1
-        #return True, ""
-
-    # 0 is COD, 1 is online
-    def add_payment(self, payment):
-        self.payment_method = payment
-        self.done[5] = 1
+    def add_field(self,ind,field):
+        self.done[ind] = 1
+        self.last = ind
+        self.fields[ind] = field
+        return self
 
     def readout(self):
-        t = (' for the {} showtime, '.format(self.time.printout()) if self.done[4] else "")
+        t = (' for the {} showtime, '.format(self.fields[4].printout()) if self.done[4] else ", ")
         readout = '{} ticket{} for {} at {}{}{}'.format(
-            self.num_tickets, ('' if self.num_tickets==1 else "s"),
-                              self.title, self.theatre,t, self.date)
+            self.fields[1], ('' if self.fields[1]==1 else "s"),
+                              self.fields[0], self.fields[2],t, self.fields[3])
         return readout
 
 
@@ -218,9 +200,10 @@ class State:
         chatLines = []
         self.conversation = Conversation(chatLines)
 
-        # must be mutable so that the alias will mess with it
         self.s_time = []
         self.s_tday = []
+
+        self.starting = True
 
     def add_line(self, line_string):
         self.conversation.chatLines.append(ChatLine(content=line_string))
